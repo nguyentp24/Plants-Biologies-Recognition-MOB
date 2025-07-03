@@ -24,14 +24,13 @@ import Animated, {
 import { AuthStackParamList } from '../../types/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import { api } from '../../../config/axios'; // Import axios instance
 
 // Định nghĩa kiểu TypeScript cho AuthContext
 interface AuthContextType {
     setLoggedIn: (value: boolean) => void;
 }
 
-export default function SignIn() {
+export default function ForgetPassword() {
     const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
     const { setLoggedIn } = useAuth() as AuthContextType;
 
@@ -92,22 +91,22 @@ export default function SignIn() {
         }
 
         try {
-            const body = {
-                account: email,
-                password: password,
-            };
+            const response = await fetch('https://plants-biologies.onrender.com/api/Authentication/login', {
+                method: 'POST',
+                headers: {
+                    'Accept': '*/*',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    account: email,
+                    password: password,
+                }),
+            });
 
-            const response = await api.post('/Authentication/login',  
-                body
-            );
-
-            const data = response.data;
-            console.log('Đăng nhập thành công:', data);
+            const data = await response.json();
 
             if (data.token) {
                 await AsyncStorage.setItem('userToken', data.token);
-                await AsyncStorage.setItem('userId', data.user.userId);
-                console.log('Token đã được lưu:', data.user.userId);
                 setLoggedIn(true);
             } else {
                 setError('Đăng nhập thất bại. Vui lòng thử lại.');
@@ -186,7 +185,7 @@ export default function SignIn() {
                         <TouchableOpacity
                             onPressIn={() => handlePressIn('forgotPassword')}
                             onPressOut={() => handlePressOut('forgotPassword')}
-                            onPress={() => navigation.navigate('ForgotPassword')}
+                            onPress={() => console.log('Forgot password pressed')}
                         >
                             <Text style={styles.linkText}>Quên mật khẩu?</Text>
                         </TouchableOpacity>

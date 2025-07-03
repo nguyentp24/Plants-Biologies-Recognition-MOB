@@ -1,20 +1,27 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-const baseUrl = "https://plants-biologies.onrender.com/api/";
 
-const config = {
+const baseUrl = "https://bilogieseducationapp.onrender.com/api/";
+
+export const api = axios.create({
     baseURL: baseUrl,
-};
+    headers: {
+        "Content-Type": "application/json",
+    },
+});
 
-const api = axios.create(config);
-
-api.defaults.baseURL = baseUrl;
-// handle before call API
-const handleBefore = (config) => {
-    const token = localStorage.getItem("token")?.replaceAll('"', "");
-    config.headers["Authorization"] = `Bearer ${token}`;
-    return config;
-};
-
-api.interceptors.request.use(handleBefore, null);
+// Interceptor bất đồng bộ để lấy token sau khi login
+api.interceptors.request.use(
+    async (config) => {
+        const token = await AsyncStorage.getItem("token");
+        if (token) {
+            config.headers.Authorization = `Bearer ${token.replace(/"/g, "")}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
 
 export default api;

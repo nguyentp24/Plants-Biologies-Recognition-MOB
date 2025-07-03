@@ -1,21 +1,97 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
     View,
     Text,
     StyleSheet,
     SafeAreaView,
     Image,
-    TouchableOpacity,
     ScrollView,
     Alert,
+    Pressable,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Shadow } from 'react-native-shadow-2';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withSpring,
+    withTiming,
+    Easing,
+} from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../contexts/AuthContext';
+import api from '../../../config/axios';
+
+// Định nghĩa kiểu TypeScript cho AuthContext
+interface AuthContextType {
+    setLoggedIn: (value: boolean) => void;
+}
 
 export default function Profile() {
-    const { setLoggedIn } = useAuth();
+    const { setLoggedIn } = useAuth() as AuthContextType;
+    const [infor, setInfor] = React.useState<any>(null);
 
+    const fetchProfile = async () => {
+        try {
+            const userId = await AsyncStorage.getItem('userId');
+            console.log('User ID:', userId);
+            const response = await api.get(`/Authentication/${userId}`)
+            setInfor(response.data);
+            console.log(response.data.fullName);
+        } catch (error) {
+            console.error('Lỗi khi lấy thông tin hồ sơ:', error);
+        }
+    };
+    useEffect(() => {
+        fetchProfile();
+    }, []);
+    // Animation state
+    const scaleValues = {
+        profile: useSharedValue(1),
+        account: useSharedValue(1),
+        notification: useSharedValue(1),
+        logout: useSharedValue(1),
+    };
+    const opacity = useSharedValue(0);
+
+    // Hiệu ứng fade-in khi tải
+    useEffect(() => {
+        opacity.value = withTiming(1, {
+            duration: 800,
+            easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+        });
+    }, []);
+
+    // Xử lý hiệu ứng nhấn
+    const handlePressIn = (key: keyof typeof scaleValues) => {
+        scaleValues[key].value = withSpring(0.92, { damping: 12, stiffness: 200 });
+    };
+
+    const handlePressOut = (key: keyof typeof scaleValues) => {
+        scaleValues[key].value = withSpring(1, { damping: 12, stiffness: 200 });
+    };
+
+    // Animated style
+    const animatedStyles = {
+        container: useAnimatedStyle(() => ({
+            opacity: opacity.value,
+        })),
+        profile: useAnimatedStyle(() => ({
+            transform: [{ scale: scaleValues.profile.value }],
+        })),
+        account: useAnimatedStyle(() => ({
+            transform: [{ scale: scaleValues.account.value }],
+        })),
+        notification: useAnimatedStyle(() => ({
+            transform: [{ scale: scaleValues.notification.value }],
+        })),
+        logout: useAnimatedStyle(() => ({
+            transform: [{ scale: scaleValues.logout.value }],
+        })),
+    };
+
+    // Hàm xác nhận đăng xuất
     const confirmLogout = () => {
         Alert.alert(
             'Xác nhận',
@@ -26,7 +102,7 @@ export default function Profile() {
                     text: 'Đồng ý',
                     onPress: async () => {
                         await AsyncStorage.removeItem('userToken');
-                        setLoggedIn(false); // ✅ Quay về AuthStack
+                        setLoggedIn(false);
                     },
                 },
             ],
@@ -36,65 +112,181 @@ export default function Profile() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
-                <Text style={styles.header}>Cài đặt tài khoản</Text>
+            <LinearGradient
+                colors={['#1B263B', '#2E3B55']}
+                style={styles.gradientBackground}
+            >
+                <Animated.View style={[styles.scrollWrapper, animatedStyles.container]}>
+                    <ScrollView contentContainerStyle={styles.scrollContainer}>
+                        {/* Header Section */}
+                        <LinearGradient
+                            colors={['#FFD700', '#D4A017']}
+                            style={styles.headerGradient}
+                        >
+                            <Text style={styles.header}>Hồ sơ người dùng</Text>
+                        </LinearGradient>
 
-                <TouchableOpacity style={styles.profileCard}>
-                    <Image
-                        source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }}
-                        style={styles.avatar}
-                    />
-                    <View style={styles.userInfo}>
-                        <Text style={styles.name}>Sabohiddin</Text>
-                        <Text style={styles.subtitle}>Digital goodies designer - Pixsellz</Text>
-                    </View>
-                    <MaterialIcons name="chevron-right" size={24} color="#ccc" />
-                </TouchableOpacity>
+                        {/* Profile Card */}
+                        <Shadow distance={10} startColor="#00000020" offset={[0, 4]}>
+                            <Animated.View style={[styles.profileCard, animatedStyles.profile]}>
+                                <Pressable
+                                    onPressIn={() => handlePressIn('profile')}
+                                    onPressOut={() => handlePressOut('profile')}
+                                    style={styles.profilePressable}
+                                >
+                                    <View style={styles.avatarContainer}>
+                                        <Image
+                                            source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }}
+                                            style={styles.avatar}
+                                        />
+                                    </View>
+                                    <View style={styles.userInfo}>
+                                        <Text style={styles.name}>{infor?.fullName}</Text>
+                                        <Text style={styles.subtitle}>{infor?.role}</Text>
+                                    </View>
+                                    <MaterialIcons name="chevron-right" size={28} color="#FFD700" />
+                                </Pressable>
+                            </Animated.View>
+                        </Shadow>
 
-                <View style={styles.menuItem}>
-                    <MaterialIcons name="person" size={20} color="#1976D2" />
-                    <Text style={styles.menuText}>Tài khoản</Text>
-                    <MaterialIcons name="chevron-right" size={20} color="#ccc" style={styles.rightIcon} />
-                </View>
+                        {/* Menu Items */}
+                        <Shadow distance={8} startColor="#00000020" offset={[0, 3]}>
+                            <Animated.View style={[styles.menuItem, animatedStyles.account]}>
+                                <Pressable
+                                    onPressIn={() => handlePressIn('account')}
+                                    onPressOut={() => handlePressOut('account')}
+                                    style={styles.menuPressable}
+                                >
+                                    <MaterialIcons name="person" size={28} color="#FFD700" />
+                                    <Text style={styles.menuText}>Tài khoản</Text>
+                                    <MaterialIcons name="chevron-right" size={28} color="#FFD700" />
+                                </Pressable>
+                            </Animated.View>
+                        </Shadow>
 
-                <View style={styles.menuItem}>
-                    <MaterialCommunityIcons name="bell-ring" size={20} color="#F44336" />
-                    <Text style={styles.menuText}>Thông báo</Text>
-                    <MaterialIcons name="chevron-right" size={20} color="#ccc" style={styles.rightIcon} />
-                </View>
+                        <Shadow distance={8} startColor="#00000020" offset={[0, 3]}>
+                            <Animated.View style={[styles.menuItem, animatedStyles.notification]}>
+                                <Pressable
+                                    onPressIn={() => handlePressIn('notification')}
+                                    onPressOut={() => handlePressOut('notification')}
+                                    style={styles.menuPressable}
+                                >
+                                    <MaterialCommunityIcons name="bell-ring" size={28} color="#FFD700" />
+                                    <Text style={styles.menuText}>Thông báo</Text>
+                                    <MaterialIcons name="chevron-right" size={28} color="#FFD700" />
+                                </Pressable>
+                            </Animated.View>
+                        </Shadow>
 
-                <TouchableOpacity style={styles.menuItem} onPress={confirmLogout}>
-                    <MaterialCommunityIcons name="power" size={20} color="#D32F2F" />
-                    <Text style={[styles.menuText, { color: '#D32F2F' }]}>Đăng xuất</Text>
-                    <MaterialIcons name="chevron-right" size={20} color="#ccc" style={styles.rightIcon} />
-                </TouchableOpacity>
-            </ScrollView>
+                        <Shadow distance={8} startColor="#00000020" offset={[0, 3]}>
+                            <Animated.View style={[styles.menuItem, animatedStyles.logout]}>
+                                <Pressable
+                                    onPressIn={() => handlePressIn('logout')}
+                                    onPressOut={() => handlePressOut('logout')}
+                                    onPress={confirmLogout}
+                                    style={styles.menuPressable}
+                                >
+                                    <MaterialCommunityIcons name="power" size={28} color="#FF5252" />
+                                    <Text style={[styles.menuText, { color: '#FF5252' }]}>Đăng xuất</Text>
+                                    <MaterialIcons name="chevron-right" size={28} color="#FFD700" />
+                                </Pressable>
+                            </Animated.View>
+                        </Shadow>
+                    </ScrollView>
+                </Animated.View>
+            </LinearGradient>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#fff' },
-    scrollContainer: { padding: 16 },
-    header: { fontSize: 20, fontWeight: '600', alignSelf: 'center', marginBottom: 16 },
+    container: {
+        flex: 1,
+    },
+    gradientBackground: {
+        flex: 1,
+    },
+    scrollWrapper: {
+        flex: 1,
+    },
+    scrollContainer: {
+        padding: 24,
+        paddingBottom: 48,
+    },
+    headerGradient: {
+        borderRadius: 16,
+        paddingVertical: 16,
+        paddingHorizontal: 24,
+        marginBottom: 24,
+    },
+    header: {
+        fontSize: 26,
+        fontWeight: '700',
+        color: '#fff',
+        textAlign: 'center',
+        textShadowColor: '#00000040',
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 6,
+    },
     profileCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 16,
-        borderBottomColor: '#eee',
-        borderBottomWidth: 1,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 24,
+        width: '100%',
     },
-    avatar: { width: 56, height: 56, borderRadius: 28, marginRight: 12 },
-    userInfo: { flex: 1 },
-    name: { fontWeight: 'bold', fontSize: 16 },
-    subtitle: { color: '#777', fontSize: 13 },
-    menuItem: {
+    profilePressable: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 16,
-        borderBottomColor: '#eee',
-        borderBottomWidth: 1,
+        flex: 1,
     },
-    menuText: { fontSize: 15, marginLeft: 12, flex: 1 },
-    rightIcon: { marginLeft: 'auto' },
+    avatarContainer: {
+        borderWidth: 3,
+        borderColor: '#FFD700',
+        borderRadius: 40,
+        padding: 3,
+    },
+    avatar: {
+        width: 72,
+        height: 72,
+        borderRadius: 36,
+    },
+    userInfo: {
+        flex: 1,
+        marginLeft: 16,
+    },
+    name: {
+        fontSize: 20,
+        fontWeight: '600',
+        color: '#1B263B',
+    },
+    subtitle: {
+        fontSize: 14,
+        color: '#666',
+        marginTop: 6,
+    },
+    menuItem: {
+
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 18,
+        marginBottom: 16,
+        width: '100%',
+    },
+    menuPressable: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    menuText: {
+        fontSize: 18,
+        fontWeight: '500',
+        color: '#1B263B',
+        marginLeft: 16,
+        flex: 1,
+    },
 });
