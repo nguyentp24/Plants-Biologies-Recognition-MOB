@@ -7,13 +7,11 @@ import {
     StyleSheet,
     Image,
     SafeAreaView,
-    Dimensions,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialIcons } from '@expo/vector-icons';
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
@@ -63,7 +61,7 @@ export default function SignIn() {
     };
 
     const handlePressOut = (key: keyof typeof scaleValues) => {
-        scaleValues[key].value = withSpring(1, { damping: 12, stiffness: 200 });
+        scaleValues[key].value = withSpring(1, { damping: 12, stiffness: 200 }); 
     };
 
     // Animated style

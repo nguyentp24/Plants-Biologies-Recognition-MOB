@@ -3,6 +3,8 @@ import axios from "axios";
 
 const baseUrl = "https://bilogieseducationapp.onrender.com/api/";
 
+
+
 export const api = axios.create({
     baseURL: baseUrl,
     headers: {
@@ -13,7 +15,7 @@ export const api = axios.create({
 // Interceptor bất đồng bộ để lấy token sau khi login
 api.interceptors.request.use(
     async (config) => {
-        const token = await AsyncStorage.getItem("token");
+        const token = await AsyncStorage.getItem("userToken");
         if (token) {
             config.headers.Authorization = `Bearer ${token.replace(/"/g, "")}`;
         }

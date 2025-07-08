@@ -9,17 +9,22 @@ export default function SignUp() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [role, setRole] = useState('Student'); // Default role
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [role, setRole] = useState('Student');
     const [error, setError] = useState('');
 
     const handleSignUp = async () => {
-        if (!name || !email || !password) {
+        if (!name || !email || !password || !confirmPassword) {
             setError('Vui lòng điền đầy đủ thông tin.');
             return;
         }
 
+        if (password !== confirmPassword) {
+            setError('Mật khẩu xác nhận không khớp.');
+            return;
+        }
+
         try {
-            // Gửi request tới API đăng ký
             const response = await fetch('https://plants-biologies.onrender.com/api/Authentication/register', {
                 method: 'POST',
                 headers: {
@@ -28,22 +33,15 @@ export default function SignUp() {
                 },
                 body: JSON.stringify({
                     account: email,
-                    password: password,
+                    password,
                     fullName: name,
-                    role: role,
+                    role,
                 }),
             });
 
-            // Kiểm tra mã phản hồi
-            if (!response.ok) {
-                setError('Đã có lỗi xảy ra. Vui lòng thử lại.');
-                return;
-            }
-
             const data = await response.json();
 
-            if (data.userId) {
-                // Nếu đăng ký thành công, chuyển đến trang đăng nhập
+            if (response.ok && data.userId) {
                 navigation.navigate('SignIn');
             } else {
                 setError('Đăng ký thất bại. Vui lòng thử lại.');
@@ -56,20 +54,14 @@ export default function SignUp() {
 
     return (
         <View style={styles.container}>
-            {/* Logo */}
             <View style={styles.logoSection}>
-                <Image
-                    source={{ uri: 'https://via.placeholder.com/150' }} // Placeholder logo
-                    style={styles.logo}
-                />
+                <Image source={{ uri: 'https://via.placeholder.com/150' }} style={styles.logo} />
                 <Text style={styles.logoText}>PLANT BIOLOGY EDUCATION</Text>
             </View>
 
-            {/* Title */}
-            <Text style={styles.title}>Sign up</Text>
+            <Text style={styles.title}>Đăng ký</Text>
 
-            {/* Full Name Input */}
-            <Text style={styles.label}>Full name</Text>
+            <Text style={styles.label}>Họ tên</Text>
             <TextInput
                 style={styles.input}
                 placeholder="Full Name"
@@ -77,17 +69,16 @@ export default function SignUp() {
                 onChangeText={setName}
             />
 
-            {/* Email Input */}
-            <Text style={styles.label}>Account</Text>
+            <Text style={styles.label}>Tài khoản</Text>
             <TextInput
                 style={styles.input}
                 placeholder="Username"
                 value={email}
                 onChangeText={setEmail}
+                autoCapitalize="none"
             />
 
-            {/* Password Input */}
-            <Text style={styles.label}>Password</Text>
+            <Text style={styles.label}>Mật khẩu</Text>
             <TextInput
                 style={styles.input}
                 placeholder="Password"
@@ -96,8 +87,16 @@ export default function SignUp() {
                 secureTextEntry
             />
 
-            {/* Role Selection */}
-            <Text style={styles.label}>Role</Text>
+            <Text style={styles.label}>Xác nhận mật khẩu</Text>
+            <TextInput
+                style={styles.input}
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+            />
+
+            <Text style={styles.label}>Vai trò</Text>
             <View style={styles.roleSection}>
                 <TouchableOpacity
                     style={[styles.roleButton, role === 'Student' && styles.selectedRole]}
@@ -113,28 +112,14 @@ export default function SignUp() {
                 </TouchableOpacity>
             </View>
 
-            {/* Error message */}
             {error !== '' && <Text style={styles.error}>{error}</Text>}
 
-            {/* Sign Up Button */}
             <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-                <Text style={styles.buttonText}>Sign up</Text>
+                <Text style={styles.buttonText}>Đăng ký</Text>
             </TouchableOpacity>
 
-            {/* "or" separator */}
-            <Text style={styles.orText}>or</Text>
-
-            {/* Sign up with Google */}
-            <TouchableOpacity
-                style={styles.googleButton}
-                onPress={() => console.log('Google sign up pressed')}
-            >
-                <Text style={styles.googleButtonText}>Sign up with Google</Text>
-            </TouchableOpacity>
-
-            {/* Sign in link */}
             <TouchableOpacity onPress={() => navigation.navigate('SignIn')}>
-                <Text style={styles.link}>Already have an account? Sign in</Text>
+                <Text style={styles.link}>Đã có tài khoản? Đăng nhập</Text>
             </TouchableOpacity>
         </View>
     );
@@ -165,18 +150,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     selectedRole: { backgroundColor: '#4CAF50', borderColor: '#4CAF50' },
-    roleText: { fontSize: 14, color: '#333' },
+    roleText: { fontSize: 14, color: '#fff' },
     error: { color: 'red', marginBottom: 10, textAlign: 'center' },
     button: { backgroundColor: '#4CAF50', padding: 14, borderRadius: 8, alignItems: 'center' },
     buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-    orText: { textAlign: 'center', color: '#777', fontSize: 14, marginVertical: 10 },
-    googleButton: {
-        backgroundColor: '#4285F4',
-        padding: 14,
-        borderRadius: 8,
-        marginTop: 20,
-        alignItems: 'center',
-    },
-    googleButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
     link: { marginTop: 20, textAlign: 'center', color: '#1e90ff', fontSize: 14 },
 });
