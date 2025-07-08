@@ -20,7 +20,7 @@ export default function SignUp() {
 
         try {
             // Gửi request tới API đăng ký
-            const response = await fetch('https://plants-biologies.onrender.com/api/Authentication/register', {
+            const response = await fetch('https://bilogieseducationapp.onrender.com/api/Authentication/register', {
                 method: 'POST',
                 headers: {
                     'Accept': '*/*',
