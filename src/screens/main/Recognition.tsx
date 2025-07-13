@@ -1,101 +1,131 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Modal } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ScrollView, Alert, ActivityIndicator, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
-type PlantInfo = {
-    uri: string;
-    name: string;
-    description: string;
-};
-
 export default function Recognition() {
-    const [images, setImages] = useState<PlantInfo[]>([]);
-    const [selectedPlant, setSelectedPlant] = useState<PlantInfo | null>(null);
+    const [image, setImage] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [name, setName] = useState('');
+    const [info, setInfo] = useState(null);
 
     const pickImage = async () => {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-            alert('Permission Denied: We need permission to access your gallery.');
+        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!permission.granted) {
+            Alert.alert('Bạn cần cấp quyền truy cập ảnh');
             return;
         }
 
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            quality: 1,
+        const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images });
+        if (!result.canceled && result.assets?.length > 0) {
+            setImage(result.assets[0]);
+            setName('');
+            setInfo(null);
+        }
+    };
+
+    const recognize = async () => {
+        if (!image) return;
+        setLoading(true);
+
+        const formData = new FormData();
+        formData.append('image', {
+            uri: image.uri,
+            name: 'image.jpg',
+            type: 'image/jpeg',
         });
 
-        if (!result.canceled && result.assets.length > 0) {
-            const newImage = {
-                uri: result.assets[0].uri,
-                name: 'Fern',
-                description:
-                    'The Fern is a member of a group of about 12,000 species of vascular plants that reproduce via spores and have neither seeds nor flowers...',
-            };
+        try {
+            const res = await fetch('https://bilogieseducationapp.onrender.com/api/Predict/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'multipart/form-data' },
+                body: formData,
+            });
 
-            setImages((prevImages) => [...prevImages, newImage]);
+            const result = await res.json();
+            const label = result?.[0]?.name;
+            setName(label);
+
+            // Fetch biology info
+            const res2 = await fetch(`https://bilogieseducationapp.onrender.com/api/Biologies/search?input=${encodeURIComponent(label)}`);
+            const data = await res2.json();
+            if (Array.isArray(data) && data.length > 0) setInfo(data[0]);
+            else setInfo(null);
+        } catch (err) {
+            Alert.alert('Lỗi', 'Không nhận diện được');
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Plant Recognition</Text>
-            <Text style={styles.subtitle}>Upload plant images to identify them.</Text>
+        <ScrollView style={styles.container}>
+            <Text style={styles.title}>Biology Recognition App</Text>
+            <Text style={styles.subtitle}>Nhận diện và tìm hiểu sinh vật</Text>
 
             <TouchableOpacity style={styles.button} onPress={pickImage}>
-                <Text style={styles.buttonText}>Upload Image</Text>
+                <Text style={styles.buttonText}>📸 Chọn ảnh</Text>
             </TouchableOpacity>
 
-            <ScrollView style={{ width: '100%', marginTop: 20 }}>
-                {images.map((img, index) => (
-                    <View key={index} style={styles.row}>
-                        <Image source={{ uri: img.uri }} style={styles.thumbnail} />
-                        <View style={styles.infoBox}>
-                            <Text style={styles.plantText}>This is {img.name},....</Text>
-                            <TouchableOpacity onPress={() => setSelectedPlant(img)}>
-                                <Text style={styles.moreInfo}>Click Here to get more information</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                ))}
-            </ScrollView>
-
-            <Modal visible={!!selectedPlant} transparent animationType="slide">
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        {selectedPlant && (
-                            <>
-                                <Image source={{ uri: selectedPlant.uri }} style={styles.modalImage} />
-                                <Text style={styles.modalTitle}>{selectedPlant.name}</Text>
-                                <Text style={styles.modalSubtitle}>Pteridophyt</Text>
-                                <Text style={styles.modalText}>{selectedPlant.description}</Text>
-                            </>
-                        )}
-                        <TouchableOpacity style={styles.closeButton} onPress={() => setSelectedPlant(null)}>
-                            <Text style={{ color: '#fff' }}>Close</Text>
-                        </TouchableOpacity>
-                    </View>
+            {image && (
+                <View style={styles.imageBox}>
+                    <Image source={{ uri: image.uri }} style={styles.image} />
+                    <Text style={styles.size}>Kích thước: {image.width} x {image.height}</Text>
                 </View>
-            </Modal>
-        </View>
+            )}
+
+            {image && (
+                <TouchableOpacity style={styles.detectButton} onPress={recognize}>
+                    <Text style={styles.buttonText}>🚀 Nhận diện sinh vật</Text>
+                </TouchableOpacity>
+            )}
+
+            {loading && <ActivityIndicator style={{ marginTop: 10 }} size="large" color="#27ae60" />}
+
+            {name && (
+                <View style={styles.resultBox}>
+                    <Text style={styles.success}>✅ Nhận diện thành công!</Text>
+                    <Text style={styles.label}>🎯 Kết quả nhận diện:</Text>
+                    <Text style={styles.name}>🐾 {name}</Text>
+                </View>
+            )}
+
+            {info && (
+                <View style={styles.card}>
+                    <Text style={styles.sectionTitle}>📚 Thông tin sinh vật</Text>
+
+                    <Text style={styles.item}><Text style={styles.bold}>🐾 Tên thường gọi:</Text> {info.commonName}</Text>
+                    <Text style={styles.item}><Text style={styles.bold}>🔬 Tên khoa học:</Text> {info.scientificName}</Text>
+                    <Text style={styles.item}><Text style={styles.bold}>🏷️ Loài:</Text> {info.specieType}</Text>
+                    <Text style={styles.item}><Text style={styles.bold}>📝 Mô tả:</Text> {info.description}</Text>
+                    <Text style={styles.item}><Text style={styles.bold}>🌍 Môi trường sống:</Text> {info.habitat}</Text>
+                    <Text style={styles.item}><Text style={styles.bold}>⏰ Tuổi thọ:</Text> {info.averageLifeSpan}</Text>
+                    <Text style={styles.item}><Text style={styles.bold}>📅 Được phát hiện:</Text> {info.discoveredAt}</Text>
+                    <Text style={[styles.status, { backgroundColor: info.isExtinct ? '#e74c3c' : '#2ecc71' }]}>
+                        {info.isExtinct ? '⚠️ Tuyệt chủng' : '✅ Còn tồn tại'}
+                    </Text>
+                </View>
+            )}
+        </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: 'black' },
-    title: { fontSize: 24, textAlign: 'center', fontWeight: 'bold', marginBottom: 2, padding: 12, color: 'white' },
-    subtitle: { fontSize: 14, color: '#aaa', textAlign: 'center', marginBottom: 10 },
-    button: { backgroundColor: '#4CAF50', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 8 },
-    buttonText: { color: '#fff', fontWeight: 'bold' },
-    row: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1c1c1c', borderRadius: 12, padding: 10, marginBottom: 15, marginHorizontal: 10 },
-    thumbnail: { width: 120, height: 90, borderRadius: 8, marginRight: 12 },
-    infoBox: { flex: 1, justifyContent: 'center' },
-    plantText: { color: '#ccc', fontSize: 14, marginBottom: 4 },
-    moreInfo: { color: 'orange', fontWeight: 'bold' },
-    modalContainer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', padding: 20 },
-    modalContent: { backgroundColor: '#fff', borderRadius: 15, padding: 20, alignItems: 'center' },
-    modalImage: { width: 200, height: 150, borderRadius: 10, marginBottom: 10 },
-    modalTitle: { fontSize: 20, fontWeight: 'bold' },
-    modalSubtitle: { fontSize: 16, color: 'gray', marginBottom: 8 },
-    modalText: { fontSize: 14, textAlign: 'center', marginBottom: 20 },
-    closeButton: { backgroundColor: 'orange', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
+    container: { padding: 20, backgroundColor: '#f4f6f8' },
+    title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginVertical: 10 },
+    subtitle: { fontSize: 14, textAlign: 'center', marginBottom: 20, color: '#666' },
+    button: { backgroundColor: '#3498db', padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 10 },
+    detectButton: { backgroundColor: '#2ecc71', padding: 12, borderRadius: 10, alignItems: 'center', marginTop: 10 },
+    buttonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+    imageBox: { alignItems: 'center', marginVertical: 10 },
+    image: { width: 250, height: 250, borderRadius: 10 },
+    size: { fontSize: 12, color: '#888', marginTop: 5 },
+    resultBox: { backgroundColor: '#e0f7ea', padding: 15, borderRadius: 10, marginTop: 15 },
+    success: { fontSize: 16, color: '#2ecc71', fontWeight: 'bold' },
+    label: { marginTop: 8, fontSize: 14 },
+    name: { fontSize: 18, fontWeight: 'bold', color: '#2c3e50' },
+    card: { backgroundColor: '#fff', padding: 20, borderRadius: 12, marginTop: 20, elevation: 2 },
+    sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
+    item: { fontSize: 14, marginBottom: 6, lineHeight: 20 },
+    bold: { fontWeight: 'bold' },
+    status: { marginTop: 10, padding: 8, color: 'white', textAlign: 'center', borderRadius: 8, fontWeight: 'bold' },
 });

@@ -14,14 +14,14 @@ export default function MainTab() {
             <Tab.Screen name="Home" component={Home} options={{
                 tabBarIcon: ({ color, size }) => <MaterialIcons name="home" size={size} color={color} />
             }} />
-            <Tab.Screen name="Profile" component={Profile} options={{
-                tabBarIcon: ({ color, size }) => <MaterialIcons name="person" size={size} color={color} />
+            <Tab.Screen name="Recognition" component={Recognition} options={{
+                tabBarIcon: ({ color, size }) => <MaterialIcons name="camera-alt" size={size} color={color} />
             }} />
             <Tab.Screen name="Resources" component={Resources} options={{
                 tabBarIcon: ({ color, size }) => <MaterialIcons name="library-books" size={size} color={color} />
             }} />
-            <Tab.Screen name="Recognition" component={Recognition} options={{
-                tabBarIcon: ({ color, size }) => <MaterialIcons name="camera-alt" size={size} color={color} />
+            <Tab.Screen name="Profile" component={Profile} options={{
+                tabBarIcon: ({ color, size }) => <MaterialIcons name="person" size={size} color={color} />
             }} />
         </Tab.Navigator>
     );

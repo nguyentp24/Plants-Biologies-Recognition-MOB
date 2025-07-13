@@ -1,65 +1,58 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FlatList, Linking, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import axios from 'axios';
 
 export default function ResourcesScreen() {
     const [searchQuery, setSearchQuery] = useState('');
+    const [suggestions, setSuggestions] = useState([]);
 
-    const resources = [
-        {
-            title: 'Encyclopedia of Plants',
-            link: 'https://en.wikipedia.org/wiki/Plant',
-            icon: 'book',
-            iconColor: '#4CAF50',
-        },
-        {
-            title: 'Plant Biology Online',
-            link: 'https://www.botany.org',
-            icon: 'language',
-            iconColor: '#2196F3',
-        },
-        {
-            title: 'Botanical Research Institute',
-            link: 'https://www.br-it.org',
-            icon: 'school',
-            iconColor: '#9C27B0',
+    // Hàm gọi API để tìm kiếm sách
+    const fetchBookSuggestions = async (query) => {
+        try {
+            const response = await axios.get('https://biggleseducationapp.onrender.com/api/Book/search', {
+                params: {
+                    title: query
+                }
+            });
+
+            // Giả sử API trả về danh sách sách dưới dạng `title`, bạn có thể điều chỉnh theo cấu trúc dữ liệu
+            const bookTitles = response.data.map(item => item.title);
+            setSuggestions(bookTitles);
+        } catch (error) {
+            console.error('Error fetching books:', error);
         }
-    ];
-
-    const openLink = (url: string) => {
-        Linking.openURL(url);
     };
 
-    const filteredResources = resources.filter(resource =>
-        resource.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // Hàm xử lý thay đổi tìm kiếm
+    const handleSearchChange = (query) => {
+        setSearchQuery(query);
+        if (query.length > 2) { // Chỉ gọi API khi người dùng nhập hơn 2 ký tự
+            fetchBookSuggestions(query);
+        } else {
+            setSuggestions([]);
+        }
+    };
 
     return (
         <View style={styles.container}>
             <View style={styles.searchContainer}>
-                <MaterialIcons name="search" size={24} color="#aaa" style={styles.searchIcon} />
                 <TextInput
                     style={styles.searchInput}
                     placeholder="Search"
-                    placeholderTextColor="#aaa"  // Màu chữ nhạt khi chưa nhập
+                    placeholderTextColor="#aaa"
                     value={searchQuery}
-                    onChangeText={setSearchQuery}
+                    onChangeText={handleSearchChange}
                 />
             </View>
 
+            {/* Hiển thị gợi ý tìm kiếm */}
             <FlatList
-                data={filteredResources}
-                keyExtractor={(item) => item.title}
+                data={suggestions}
+                keyExtractor={(item) => item}
                 renderItem={({ item }) => (
-                    <View style={styles.item}>
-                        <MaterialIcons name={item.icon} size={28} color={item.iconColor} />
-                        <View style={styles.textContent}>
-                            <Text style={styles.title}>{item.title}</Text>
-                            <TouchableOpacity onPress={() => openLink(item.link)}>
-                                <Text style={styles.link}>{item.link}</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
+                    <TouchableOpacity onPress={() => alert(`Selected book: ${item}`)}>
+                        <Text style={styles.suggestion}>{item}</Text>
+                    </TouchableOpacity>
                 )}
                 ListEmptyComponent={<Text style={styles.noResults}>No results found</Text>}
             />
@@ -85,9 +78,6 @@ const styles = StyleSheet.create({
         borderColor: '#ccc',
         borderWidth: 1,
     },
-    searchIcon: {
-        marginRight: 10,
-    },
     searchInput: {
         flex: 1,
         height: 40,
@@ -97,28 +87,11 @@ const styles = StyleSheet.create({
         borderColor: '#ccc',
         borderWidth: 1,
     },
-    item: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
+    suggestion: {
+        padding: 10,
         backgroundColor: '#fff',
-        borderRadius: 10,
-        padding: 12,
-        marginBottom: 16,
-        elevation: 1,
-    },
-    textContent: {
-        marginLeft: 12,
-        flex: 1,
-    },
-    title: {
-        fontSize: 16,
-        fontWeight: '600',
-        marginBottom: 4,
-    },
-    link: {
-        color: '#2196F3',
-        textDecorationLine: 'underline',
-        fontSize: 14,
+        borderBottomWidth: 1,
+        borderColor: '#ccc',
     },
     noResults: {
         textAlign: 'center',

@@ -1,20 +1,27 @@
+// config/axios.jsx
 import axios from "axios";
-const baseUrl = "https://bilogieseducationapp.onrender.com/api/";
 
-const config = {
-    baseURL: baseUrl,
-};
+// Base URL cho Auth / Profile / Users API
+const baseUrl = "https://biologieseducationapp.onrender.com/api";
 
-const api = axios.create(config);
+// Base URL cho AI nhận diện hình ảnh (đã có /api)
+// const aiUrl = "https://bilogieseducationapp.onrender.com/api/Predict/upload";
 
-api.defaults.baseURL = baseUrl;
-// handle before call API
+// Middleware gắn token nếu có
 const handleBefore = (config) => {
-    const token = localStorage.getItem("token")?.replaceAll('"', "");
-    config.headers["Authorization"] = `Bearer ${token}`;
-    return config;
+  try {
+    const token = localStorage?.getItem("token")?.replaceAll('"', "");
+    if (token) {
+      config.headers["Authorization"] = `Bearer ${token}`;
+    }
+  } catch (err) {
+    console.warn("Token not found or localStorage error:", err);
+  }
+  return config;
 };
 
+// API chính cho user/profile
+const api = axios.create({
+  baseURL: baseUrl,
+});
 api.interceptors.request.use(handleBefore, null);
-
-export default api;
