@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
-const baseUrl = "https://bilogieseducationapp.onrender.com/api/";
+const baseUrl = "https://plants-biologies.onrender.com/api";
 
 
 

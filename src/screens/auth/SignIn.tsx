@@ -33,7 +33,7 @@ export default function SignIn() {
     const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
     const { setLoggedIn } = useAuth() as AuthContextType;
 
-    const [email, setEmail] = useState('');
+    const [account, setAccount] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
@@ -83,39 +83,40 @@ export default function SignIn() {
         })),
     };
 
-    const handleSignIn = async () => {
-        if (!email || !password) {
-            setError('Vui lòng nhập đầy đủ thông tin.');
-            return;
-        }
+const handleSignIn = async () => {
+    if (!account || !password) {
+        setError('Vui lòng nhập đầy đủ thông tin.');
+        return;
+    }
 
-        try {
-            const body = {
-                account: email,
-                password: password,
-            };
-
-            const response = await api.post('/Authentication/login',  
-                body
-            );
-
-            const data = response.data;
-            console.log('Đăng nhập thành công:', data);
-
-            if (data.token) {
-                await AsyncStorage.setItem('userToken', data.token);
-                await AsyncStorage.setItem('userId', data.user.userId);
-                console.log('Token đã được lưu:', data.user.userId);
-                setLoggedIn(true);
-            } else {
-                setError('Đăng nhập thất bại. Vui lòng thử lại.');
-            }
-        } catch (e) {
-            console.error('Đăng nhập lỗi:', e);
-            setError('Đăng nhập thất bại. Vui lòng thử lại.');
-        }
+    const body = {
+        account: account,
+        password: password,
     };
 
+    try {
+        console.log(' Dữ liệu gửi lên:', body); 
+        console.log(api.defaults.baseURL);
+        const response = await api.post('/Authentication/login', body);
+        console.log(' Response:', response.data); // Log the response data
+
+        console.log(' Đăng nhập thành công:', response.data);
+
+        if (response.data.token) {
+            await AsyncStorage.setItem('userToken', response.data.token);
+            await AsyncStorage.setItem('userId', response.data.user.userId);
+            console.log(' Token đã lưu:', response.data.token);
+            setLoggedIn(true);
+        } else {
+            setError('Đăng nhập thất bại. Vui lòng thử lại.');
+        }
+    } catch (e: any) {
+        console.log(' Đăng nhập thất bại');
+        console.log(' Status:', e.response?.status);
+        console.log(' Response:', e.response?.data);
+        setError(e.response?.data || 'Đăng nhập thất bại. Vui lòng thử lại.');
+    }
+};
     return (
         <SafeAreaView style={styles.container}>
             <LinearGradient
@@ -147,8 +148,8 @@ export default function SignIn() {
                             <TextInput
                                 style={styles.input}
                                 placeholder="Username"
-                                value={email}
-                                onChangeText={setEmail}
+                                value={account}
+                                onChangeText={setAccount}
                                 placeholderTextColor="#666"
                             />
                             <Text style={styles.label}>Mật khẩu</Text>

@@ -65,10 +65,6 @@ export default function ForgotPassword() {
             setError('Vui lòng nhập đầy đủ email và mật khẩu mới');
             return false;
         }
-        if (!/\S+@\S+\.\S+/.test(form.account)) {
-            setError('Vui lòng nhập email hợp lệ');
-            return false;
-        }
         return true;
     };
 
