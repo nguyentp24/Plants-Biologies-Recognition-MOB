@@ -1,95 +1,20 @@
-<<<<<<< HEAD
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ActivityIndicator, Alert
-} from 'react-native';
-=======
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ActivityIndicator } from 'react-native';
->>>>>>> 3f25396 (Update Profile, Biology details)
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ActivityIndicator, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../types/navigation';
 import { useAuth } from '../../contexts/AuthContext';
-import * as AuthSession from 'expo-auth-session';
-
-// Google Sign-In
-import * as Google from 'expo-auth-session/providers/google';
-import { googleAuthConfig } from '../../config/googleAuthConfig';
-import * as WebBrowser from 'expo-web-browser';
-WebBrowser.maybeCompleteAuthSession();
 
 export default function SignIn() {
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const { setLoggedIn } = useAuth();
 
-<<<<<<< HEAD
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
-=======
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [rememberMe, setRememberMe] = useState(false);
-    const [loading, setLoading] = useState(false);
->>>>>>> 3f25396 (Update Profile, Biology details)
-
-  // Google Auth
-WebBrowser.maybeCompleteAuthSession();
-
-const redirectUri = AuthSession.makeRedirectUri({ useProxy: true } as any);
-
-
-// ✅ Gắn redirectUri vào request
-const [request, response, promptAsync] = Google.useAuthRequest({
-  clientId: '57952782502-q8suimrjpi79lprua52197e934929m04.apps.googleusercontent.com',
-  redirectUri, // 👈 RẤT QUAN TRỌNG
-});
-
-
-
-  // ✅ Google login handler (define BEFORE useEffect!)
-  const handleGoogleLogin = useCallback(
-    async (idToken: string) => {
-      try {
-        const res = await fetch('https://bilogieseducationapp.onrender.com/api/Authentication/google', {
-          method: 'POST',
-          headers: {
-            Accept: '*/*',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ idToken }),
-        });
-
-        if (!res.ok) throw new Error('Google login failed');
-
-        const data = await res.json();
-        if (data.token) {
-          await AsyncStorage.setItem('userToken', data.token);
-          setLoggedIn(true);
-        } else {
-          Alert.alert('Google login thất bại', 'Không nhận được token');
-        }
-      } catch (err) {
-        console.error(err);
-        Alert.alert('Lỗi', 'Đăng nhập Google thất bại.');
-      }
-    },
-    [setLoggedIn]
-  );
-
-<<<<<<< HEAD
-  // ✅ useEffect to trigger Google login
-  useEffect(() => {
-    if (response?.type === 'success') {
-      const idToken = (response.authentication as any).idToken;
-      handleGoogleLogin(idToken);
-    }
-  }, [response, handleGoogleLogin]);
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -98,104 +23,71 @@ const [request, response, promptAsync] = Google.useAuthRequest({
     }
 
     setLoading(true);
-    setError('');
-=======
-        setLoading(true);
-        setError(''); // Reset error before the API call
-
-        try {
-            const response = await fetch('https://bilogieseducationapp.onrender.com/api/Authentication/login', {
-                method: 'POST',
-                headers: {
-                    'Accept': '*/*',
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    identifier: email,  // Thay thế "account" thành "identifier"
-                    password: password,
-                }),
-            });
-
-            // Kiểm tra mã trạng thái HTTP
-            if (!response.ok) {
-                throw new Error('Đăng nhập thất bại. Vui lòng thử lại.');
-            }
-
-            const data = await response.json();
-
-            // Kiểm tra nếu có token trong dữ liệu trả về
-            if (data.token) {
-                // Lưu token vào AsyncStorage
-                await AsyncStorage.setItem('userToken', data.token);
-                // Lưu thông tin user vào AsyncStorage (CHUẨN KEY TỪ API)
-                await AsyncStorage.setItem(
-                    'userInfo',
-                    JSON.stringify({
-                        account: data.account,
-                        fullName: data.fullName,
-                        userId: data['user_Id'],
-                    })
-                );
-                const testUser = await AsyncStorage.getItem('userInfo');
-                console.log('TEST userInfo đã lưu:', testUser);
-                setLoggedIn(true);
-                setLoading(false);
-            } else {
-                setError('Đăng nhập thất bại. Vui lòng thử lại.');
-                setLoading(false);
-            }
-        } catch (e) {
-            console.error('Đăng nhập lỗi:', e);
-            setError('Đăng nhập thất bại. Vui lòng thử lại.');
-            setLoading(false);
-        }
-    };
->>>>>>> 3f25396 (Update Profile, Biology details)
+    setError(''); // Reset error before the API call
 
     try {
       const response = await fetch('https://bilogieseducationapp.onrender.com/api/Authentication/login', {
         method: 'POST',
         headers: {
-          Accept: '*/*',
+          'Accept': '*/*',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          identifier: email,
+          identifier: email,  // Thay thế "account" thành "identifier"
           password: password,
         }),
       });
 
-      if (!response.ok) throw new Error('Đăng nhập thất bại.');
+      // Kiểm tra mã trạng thái HTTP
+      if (!response.ok) {
+        throw new Error('Đăng nhập thất bại. Vui lòng thử lại.');
+      }
 
       const data = await response.json();
 
+      // Kiểm tra nếu có token trong dữ liệu trả về
       if (data.token) {
+        // Lưu token vào AsyncStorage
         await AsyncStorage.setItem('userToken', data.token);
+        // Lưu thông tin user vào AsyncStorage (CHUẨN KEY TỪ API)
+        await AsyncStorage.setItem(
+          'userInfo',
+          JSON.stringify({
+            account: data.account,
+            fullName: data.fullName,
+            userId: data['user_Id'],
+          })
+        );
+        const testUser = await AsyncStorage.getItem('userInfo');
+        console.log('TEST userInfo đã lưu:', testUser);
         setLoggedIn(true);
+        setLoading(false);
       } else {
         setError('Đăng nhập thất bại. Vui lòng thử lại.');
+        setLoading(false);
       }
     } catch (e) {
       console.error('Đăng nhập lỗi:', e);
       setError('Đăng nhập thất bại. Vui lòng thử lại.');
-    } finally {
       setLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
+      {/* Logo */}
       <View style={styles.logoSection}>
         <Image
-          source={{ uri: 'https://via.placeholder.com/150' }}
+          source={{ uri: 'https://via.placeholder.com/150' }} // Placeholder logo
           style={styles.logo}
         />
         <Text style={styles.logoText}>PLANT BIOLOGY EDUCATION</Text>
       </View>
 
+      {/* Title */}
       <Text style={styles.title}>Sign in</Text>
 
-<<<<<<< HEAD
+      {/* Email Input with label */}
       <Text style={styles.label}>Account</Text>
       <TextInput
         style={styles.input}
@@ -203,17 +95,8 @@ const [request, response, promptAsync] = Google.useAuthRequest({
         value={email}
         onChangeText={setEmail}
       />
-=======
-            {/* Sign in Button */}
-            <TouchableOpacity style={styles.button} onPress={handleSignIn} disabled={loading}>
-                {loading ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                    <Text style={styles.buttonText}>Sign in</Text>
-                )}
-            </TouchableOpacity>
->>>>>>> 3f25396 (Update Profile, Biology details)
 
+      {/* Password Input with label */}
       <Text style={styles.label}>Password</Text>
       <TextInput
         style={styles.input}
@@ -223,6 +106,7 @@ const [request, response, promptAsync] = Google.useAuthRequest({
         secureTextEntry
       />
 
+      {/* Remember me Checkbox */}
       <View style={styles.rememberMeSection}>
         <TouchableOpacity onPress={() => setRememberMe(!rememberMe)}>
           <Text style={styles.rememberMeText}>
@@ -231,8 +115,10 @@ const [request, response, promptAsync] = Google.useAuthRequest({
         </TouchableOpacity>
       </View>
 
+      {/* Error message */}
       {error !== '' && <Text style={styles.error}>{error}</Text>}
 
+      {/* Sign in Button */}
       <TouchableOpacity style={styles.button} onPress={handleSignIn} disabled={loading}>
         {loading ? (
           <ActivityIndicator size="small" color="#fff" />
@@ -241,20 +127,19 @@ const [request, response, promptAsync] = Google.useAuthRequest({
         )}
       </TouchableOpacity>
 
+      {/* Forgot Password */}
       <TouchableOpacity onPress={() => console.log('Forgot password pressed')}>
         <Text style={styles.forgotPassword}>Forgot your password?</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.googleButton}
-        onPress={() => promptAsync()}
-        disabled={!request}
-      >
+      {/* Google Sign in */}
+      <TouchableOpacity style={styles.googleButton} onPress={() => console.log('Google sign in pressed')}>
         <Text style={styles.googleButtonText}>Sign in with Google</Text>
       </TouchableOpacity>
 
+      {/* Sign up */}
       <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-        <Text style={styles.link}>Don&apos;t have an account? Sign up</Text>
+        <Text style={styles.link}>Don't have an account? Sign up</Text>
       </TouchableOpacity>
     </View>
   );
