@@ -14,12 +14,26 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 export default function UpdateUserScreen() {
   const [account, setAccount] = useState('');
+  const [email, setEmail] = useState('');           // Thêm state email
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('Student');
   const [fullName, setFullName] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
+
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      const userInfoStr = await AsyncStorage.getItem('userInfo');
+      if (userInfoStr) {
+        const userInfo = JSON.parse(userInfoStr);
+        setAccount(userInfo.account || '');
+        setFullName(userInfo.fullName || '');
+        setEmail(userInfo.email || '');            // Lấy email nếu có
+      }
+    };
+    fetchUserInfo();
+  }, []);
 
   const handleUpdate = async () => {
     setLoading(true);
@@ -35,8 +49,15 @@ export default function UpdateUserScreen() {
         return;
       }
 
+      if (!email) {
+        Alert.alert('Lỗi', 'Email là bắt buộc');
+        setLoading(false);
+        return;
+      }
+
       const body = {
         account,
+        email,                  // Truyền email vào body
         password,
         role,
         fullName,
@@ -58,12 +79,28 @@ export default function UpdateUserScreen() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data || 'Cập nhật thất bại.');
+        let errMsg = 'Cập nhật thất bại.';
+        if (data && typeof data === 'object') {
+          errMsg = data.message || JSON.stringify(data);
+        } else if (typeof data === 'string') {
+          errMsg = data;
+        }
+        throw new Error(errMsg);
       }
 
-      Alert.alert('Cập nhật thành công!');
+      // THÀNH CÔNG
+      console.log('Update thành công:', data);
+      Alert.alert('Thành công', data.message || 'Cập nhật thành công!');
     } catch (err) {
-      Alert.alert('Lỗi', err.message || 'Đã xảy ra lỗi.');
+      let msg = 'Đã xảy ra lỗi.';
+      if (err instanceof Error) {
+        msg = err.message;
+      } else if (typeof err === 'object') {
+        msg = JSON.stringify(err);
+      } else if (typeof err === 'string') {
+        msg = err;
+      }
+      Alert.alert('Lỗi', msg);
     } finally {
       setLoading(false);
     }
@@ -90,6 +127,20 @@ export default function UpdateUserScreen() {
             style={styles.input}
             placeholder="Nhập tài khoản"
             placeholderTextColor="#9ca3af"
+          />
+        </View>
+
+        {/* Email */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Email</Text>
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            style={styles.input}
+            placeholder="Nhập email"
+            placeholderTextColor="#9ca3af"
+            keyboardType="email-address"
+            autoCapitalize="none"
           />
         </View>
 
@@ -160,7 +211,7 @@ export default function UpdateUserScreen() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#f3f4f6', // Light gray background
+    backgroundColor: '#f3f4f6',
     padding: 16,
   },
   backContainer: {
@@ -173,11 +224,6 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 6,
   },
-  backText: {
-    fontSize: 16,
-    color: '#047857',
-    fontWeight: '600',
-  },
   card: {
     backgroundColor: '#ffffff',
     borderRadius: 12,
@@ -186,12 +232,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 4, // For Android shadow
+    elevation: 4,
   },
   header: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1f2937', // Dark gray for header
+    color: '#1f2937',
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -201,31 +247,31 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#374151', // Dark gray for labels
+    color: '#374151',
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#d1d5db', // Light gray border
+    borderColor: '#d1d5db',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
     backgroundColor: '#ffffff',
-    color: '#1f2937', // Dark text for input
+    color: '#1f2937',
   },
   disabledInput: {
-    backgroundColor: '#e5e7eb', // Gray background for disabled inputs
-    color: '#6b7280', // Lighter text for disabled inputs
+    backgroundColor: '#e5e7eb',
+    color: '#6b7280',
   },
   button: {
-    backgroundColor: '#047857', // Green button
+    backgroundColor: '#047857',
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 16,
   },
   buttonDisabled: {
-    backgroundColor: '#6b7280', // Gray when disabled
+    backgroundColor: '#6b7280',
     opacity: 0.7,
   },
   buttonText: {
