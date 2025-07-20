@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../types/navigation';
 import { useAuth } from '../../contexts/AuthContext';
-import * as AuthSession from 'expo-auth-session';
+
 
 // Google Sign-In
 import * as Google from 'expo-auth-session/providers/google';
@@ -28,13 +28,14 @@ export default function SignIn() {
   // Google Auth
 WebBrowser.maybeCompleteAuthSession();
 
-const redirectUri = AuthSession.makeRedirectUri({ useProxy: true } as any);
 
 
 // ✅ Gắn redirectUri vào request
 const [request, response, promptAsync] = Google.useAuthRequest({
-  clientId: '57952782502-q8suimrjpi79lprua52197e934929m04.apps.googleusercontent.com',
-  redirectUri, // 👈 RẤT QUAN TRỌNG
+  clientId: googleAuthConfig.expoClientId,
+  redirectUri: googleAuthConfig.redirectUri,
+  // redirectUri: AuthSession.makeRedirectUri({ useProxy: true } as any),
+  
 });
 
 
@@ -43,7 +44,7 @@ const [request, response, promptAsync] = Google.useAuthRequest({
   const handleGoogleLogin = useCallback(
     async (idToken: string) => {
       try {
-        const res = await fetch('https://bilogieseducationapp.onrender.com/api/Authentication/google', {
+        const res = await fetch('https://bilogieseducationapp.onrender.com/api/Authentication/google-signin', {
           method: 'POST',
           headers: {
             Accept: '*/*',

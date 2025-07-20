@@ -16,7 +16,7 @@
       }
     },
     "android": {
-      "googleServicesFile": "google-services.json",
+      
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -42,7 +42,7 @@
       [
         "@react-native-google-signin/google-signin",
         {
-          "iosUrlScheme": "com.googleusercontent.apps._some_id_here_"
+          "iosUrlScheme": "com.googleusercontent.apps.57952782502-gq5dlcd7svp8r9fb72qitilbsqqmn3b0"
         }
       ]
     ],
