@@ -1,117 +1,107 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Modal, Pressable, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { MainTabParamList } from '../../types/navigation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Home() {
-    const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
+    const navigation = useNavigation();
     const [books, setBooks] = useState<any[]>([]);
     const [error, setError] = useState('');
     const [selectedBook, setSelectedBook] = useState<any | null>(null);
-    const [selectedChapter, setSelectedChapter] = useState<any | null>(null);
     const [chapters, setChapters] = useState<any[]>([]);
-    const [showPicker, setShowPicker] = useState(false);  // Điều khiển việc hiển thị Picker
+    const [selectedChapter, setSelectedChapter] = useState<any | null>(null);
+    const [showModal, setShowModal] = useState(false);
+    const [loadingBooks, setLoadingBooks] = useState(false);
 
-    // Fetch the books data from the API
-    useEffect(() => {
-        const fetchBooks = async () => {
-            try {
-                const response = await fetch('https://bilogieseducationapp.onrender.com/api/Book/approved', {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                    },
-                });
-
-                if (!response.ok) {
-                    const errorText = await response.text(); // Lấy thông tin lỗi để debug
-                    setError(`Server error (${response.status}): ${errorText}`);
-                    return;
-                }
-
-                const data = await response.json();
-                setBooks(data);
-            } catch (e) {
-                setError('Could not load books. Please try again.');
+    // Fetch books data from the API
+    const fetchBooks = async () => {
+        setLoadingBooks(true);
+        setError(null);
+        try {
+            // Lấy token từ AsyncStorage
+            const token = await AsyncStorage.getItem('userToken');
+            if (!token) {
+                setError('Không tìm thấy token. Vui lòng đăng nhập lại.');
+                setLoadingBooks(false);
+                return;
             }
-        };
 
-        fetchBooks();
+            console.log('Token:', token);  // Kiểm tra token trong console
+
+            // API URL để lấy tất cả sách với tiêu đề "Đắc Nhân Tâm nè nè"
+            const url = 'https://bilogieseducationapp.onrender.com/api/Book/search';
+
+            // Gửi yêu cầu với token trong header
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,  // Gửi token trong Authorization header
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            // Kiểm tra mã trạng thái HTTP
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // Lọc tất cả các sách đã được phê duyệt (status: 'approved')
+            const approvedBooks = data.filter((book: any) => book.status === 'Approved');
+            setBooks(approvedBooks); // Lưu tất cả sách đã được phê duyệt vào state
+        } catch (err) {
+            console.error('Fetch error:', err);
+            setError('Không thể tải dữ liệu. Vui lòng thử lại sau.');
+        } finally {
+            setLoadingBooks(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchBooks(); // Gọi hàm fetchBooks khi component được render
     }, []);
 
-    // Fetch chapters data from API when book is selected
+    // Fetch chapters for selected book
     useEffect(() => {
-        const fetchChapters = async () => {
-            if (selectedBook) {
-                try {
-                    const response = await fetch(`https://bilogieseducationapp.onrender.com/api/Chapter/book/${selectedBook.book_id}`, {
-                        method: 'GET',
-                        headers: {
-                            'Accept': 'application/json',
-                        },
-                    });
-
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        setError(`Server error (${response.status}): ${errorText}`);
-                        return;
-                    }
-
-                    const data = await response.json();
-                    setChapters(data);
-                } catch (e) {
-                    setError('Could not load chapters. Please try again.');
-                }
-            }
-        };
-
-        fetchChapters();
+        if (selectedBook) {
+            setChapters(selectedBook.chapters || []);
+        } else {
+            setChapters([]);
+        }
     }, [selectedBook]);
 
     // Handle book selection
     const handleBookSelect = (book: any) => {
         setSelectedBook(book);
-        setSelectedChapter(null); // Reset selected chapter when book changes
-        setShowPicker(false); // Ẩn Picker khi đã chọn sách
-    };
-
-    // Toggle Picker visibility
-    const togglePicker = () => {
-        setShowPicker(!showPicker);
+        setShowModal(false); // Close modal when book is selected
     };
 
     // Toggle expanded chapter
-    const toggleChapter = (chapterId: number) => {
-        setSelectedChapter(selectedChapter?.chapter_id === chapterId ? null : { ...selectedChapter, chapter_id: chapterId });
+    const toggleChapter = (chapterId: string) => {
+        setSelectedChapter(selectedChapter?.chapter_Id === chapterId ? null : { ...selectedChapter, chapter_Id: chapterId });
     };
-
-    function showDetails(book_title: any, arg1: string) {
-        throw new Error('Function not implemented.');
-    }
 
     return (
         <View style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContainer}>
-                {/* App Title */}
                 <Text style={styles.appTitle}>Biology & Plant Sample Learning App</Text>
 
-                {/* Header Section */}
                 <View style={styles.header}>
                     <Text style={styles.welcomeText}>Welcome to Learning Environment</Text>
                     <Text style={styles.subText}>Explore the Biology of Plants and Animals</Text>
                 </View>
 
-                {/* Book Categories Section */}
                 <Text style={styles.sectionHeader}>Book Categories</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
-                    {books.length > 0 ? (
+                    {loadingBooks ? (
+                        <ActivityIndicator size="large" color="#0000ff" />
+                    ) : books.length > 0 ? (
                         books.map((book) => (
-                            <View key={book.book_id} style={styles.card}>
+                            <View key={book.book_Id} style={styles.card}>
                                 <TouchableOpacity
                                     style={styles.learnMoreBtn}
-                                    onPress={() => showDetails(book.book_title, 'Click to explore more about this book')}
+                                    onPress={() => { }}
                                 >
                                     <Text style={styles.learnMoreText}>Learn more</Text>
                                 </TouchableOpacity>
@@ -119,7 +109,7 @@ export default function Home() {
                                     source={{ uri: book.cover_img }}
                                     style={styles.cardImage}
                                 />
-                                <Text style={styles.cardTitle}>{book.book_title}</Text> {/* Title of the book */}
+                                <Text style={styles.cardTitle}>{book.book_Title}</Text>
                                 <Text style={styles.cardSubtitle}>Explore various plants and their features.</Text>
                             </View>
                         ))
@@ -128,59 +118,78 @@ export default function Home() {
                     )}
                 </ScrollView>
 
-                {/* Select a Book Section */}
                 <Text style={styles.sectionHeader}>Select a Book to Continue</Text>
-                {/* Add TouchableOpacity for showing Picker */}
                 <View style={styles.selectBookContainer}>
-                    <Text style={styles.selectBookText}>
-                        {selectedBook ? selectedBook.book_title : 'Tap to select a book'}
-                    </Text>
                     <TouchableOpacity
                         style={styles.selectBookBtn}
-                        onPress={togglePicker}
+                        onPress={() => setShowModal(true)}
                     >
                         <Text style={styles.selectBookBtnText}>Select a book</Text>
                     </TouchableOpacity>
+                    <Text style={styles.selectBookText}>
+                        {selectedBook ? selectedBook.book_Title : 'Chưa chọn sách'}
+                    </Text>
                 </View>
 
-                {/* Display Picker when showPicker is true */}
-                {showPicker && (
-                    <Picker
-                        selectedValue={selectedBook ? selectedBook.book_id : null}
-                        onValueChange={(itemValue) => {
-                            const book = books.find((b) => b.book_id === itemValue);
-                            handleBookSelect(book);
-                        }}
-                        style={styles.picker}
-                    >
-                        <Picker.Item label="Select a book" value={null} />
-                        {books.map((book) => (
-                            <Picker.Item key={book.book_id} label={book.book_title} value={book.book_id} />
-                        ))}
-                    </Picker>
-                )}
+                {/* Modal for Book Selection */}
+                <Modal
+                    visible={showModal}
+                    animationType="slide"
+                    transparent={true}
+                    onRequestClose={() => setShowModal(false)}
+                >
+                    <View style={styles.modalBackground}>
+                        <View style={styles.modalContainer}>
+                            <Text style={styles.modalTitle}>Select a Book</Text>
+                            {loadingBooks ? (
+                                <ActivityIndicator size="large" color="#0000ff" />
+                            ) : books.length > 0 ? (
+                                <View style={styles.pickerContainer}>
+                                    {books.map((book) => (
+                                        <TouchableOpacity
+                                            key={book.book_Id}
+                                            style={styles.pickerItem}
+                                            onPress={() => handleBookSelect(book)}
+                                        >
+                                            <Text style={styles.pickerItemText}>{book.book_Title}</Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            ) : (
+                                <Text style={{ color: "red", textAlign: "center", marginVertical: 20 }}>
+                                    Không có sách nào hoặc chưa lấy được dữ liệu!
+                                </Text>
+                            )}
+                            <Pressable
+                                style={styles.closeButton}
+                                onPress={() => setShowModal(false)}
+                            >
+                                <Text style={styles.closeButtonText}>Close</Text>
+                            </Pressable>
+                        </View>
+                    </View>
+                </Modal>
 
-                {/* Chapters Section */}
                 {selectedBook && (
                     <View>
                         <Text style={styles.sectionHeader}>Chapters</Text>
                         {chapters.length > 0 ? (
                             chapters.map((chapter: any) => (
-                                <View key={chapter.chapter_id}>
+                                <View key={chapter.chapter_Id}>
                                     <TouchableOpacity
                                         style={styles.chapterBtn}
-                                        onPress={() => toggleChapter(chapter.chapter_id)}
+                                        onPress={() => toggleChapter(chapter.chapter_Id)}
                                     >
                                         <Text style={styles.chapterText}>
-                                            {selectedChapter?.chapter_id === chapter.chapter_id ? '▼' : '►'} {chapter.chapter_title}
+                                            {selectedChapter?.chapter_Id === chapter.chapter_Id ? '▼' : '►'} {chapter.chapter_Title}
                                         </Text>
                                     </TouchableOpacity>
 
-                                    {selectedChapter?.chapter_id === chapter.chapter_id && (
+                                    {selectedChapter?.chapter_Id === chapter.chapter_Id && (
                                         <View style={styles.lessonContainer}>
                                             {chapter.lessons.map((lesson: any) => (
-                                                <Text key={lesson.lesson_id} style={styles.lesson}>
-                                                    {lesson.lesson_title}
+                                                <Text key={lesson.lesson_Id} style={styles.lesson}>
+                                                    {lesson.lesson_Title}
                                                 </Text>
                                             ))}
                                         </View>
@@ -188,11 +197,10 @@ export default function Home() {
                                 </View>
                             ))
                         ) : (
-                            <Text>{error || 'Loading chapters...'}</Text>
+                            <Text>{error || 'No chapters available for this book.'}</Text>
                         )}
                     </View>
                 )}
-
             </ScrollView>
         </View>
     );
@@ -201,57 +209,30 @@ export default function Home() {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#fff' },
     scrollContainer: { padding: 16 },
-    appTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#000',
-        alignSelf: 'center',
-        marginBottom: 12,
-        borderWidth: 1,
-        borderColor: '#1e90ff',
-        padding: 10,
-        borderRadius: 6,
-    },
+    appTitle: { fontSize: 20, fontWeight: 'bold', color: '#000', alignSelf: 'center', marginBottom: 12, borderWidth: 1, borderColor: '#1e90ff', padding: 10, borderRadius: 6 },
     header: { marginBottom: 20, alignItems: 'center' },
     welcomeText: { fontSize: 18, fontWeight: '600', color: '#333' },
     subText: { fontSize: 14, color: '#777', marginTop: 6 },
     sectionHeader: { fontSize: 18, fontWeight: 'bold', marginTop: 20, color: '#333' },
     categoryScroll: { flexDirection: 'row', marginTop: 16 },
-    card: {
-        width: 200,
-        backgroundColor: '#eee',
-        borderRadius: 16,
-        marginRight: 16,
-        padding: 10,
-        alignItems: 'center',
-        position: 'relative',
-    },
+    card: { width: 200, backgroundColor: '#eee', borderRadius: 16, marginRight: 16, padding: 10, alignItems: 'center', position: 'relative' },
     cardImage: { width: '100%', height: 120, borderRadius: 8 },
-    cardTitle: { fontSize: 16, fontWeight: 'bold', marginTop: 8, textAlign: 'center' }, // Center title
+    cardTitle: { fontSize: 16, fontWeight: 'bold', marginTop: 8, textAlign: 'center' },
     cardSubtitle: { fontSize: 14, color: '#555', marginTop: 4 },
-    learnMoreBtn: {
-        position: 'absolute',
-        top: 6,
-        left: 6,
-        backgroundColor: '#000',
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        borderRadius: 4,
-        zIndex: 1,
-    },
-    learnMoreText: { color: '#fff', fontSize: 11 },
-    selectBookContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 12 },
-    selectBookText: { fontSize: 16, color: '#333', flex: 1 },
-    selectBookBtn: {
-        padding: 10,
-        backgroundColor: '#1e90ff',
-        borderRadius: 8,
-        marginLeft: 10,
-    },
+    selectBookContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 12, justifyContent: 'flex-start' },
+    selectBookBtn: { padding: 10, backgroundColor: '#1e90ff', borderRadius: 8, marginRight: 10, },
     selectBookBtnText: { fontSize: 16, color: '#fff' },
-    picker: { height: 50, width: '100%', marginTop: 12 },
+    selectBookText: { fontSize: 16, color: '#333', flex: 1, textAlign: 'right', },
+    pickerContainer: { padding: 10 },
+    pickerItem: { padding: 12, backgroundColor: '#ddd', borderRadius: 8, marginTop: 8 },
+    pickerItemText: { fontSize: 16, color: '#333' },
     chapterBtn: { padding: 10, backgroundColor: '#ddd', borderRadius: 8, marginTop: 8 },
     chapterText: { fontSize: 16, fontWeight: 'bold', color: '#333' },
     lessonContainer: { marginLeft: 20, marginTop: 10 },
     lesson: { fontSize: 14, color: '#777' },
+    modalBackground: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' },
+    modalContainer: { backgroundColor: '#fff', padding: 20, borderRadius: 10, width: '80%' },
+    modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
+    closeButton: { marginTop: 20, backgroundColor: '#1e90ff', paddingVertical: 10, borderRadius: 8 },
+    closeButtonText: { color: '#fff', textAlign: 'center' },
 });

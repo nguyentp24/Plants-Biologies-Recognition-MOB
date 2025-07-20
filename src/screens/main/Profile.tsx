@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -12,9 +12,33 @@ import {
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigation } from '@react-navigation/native';
 
 export default function Profile() {
     const { setLoggedIn } = useAuth();
+    const navigation = useNavigation<any>();
+
+    // Thêm state cho user
+    const [user, setUser] = useState<{ account: string; fullName: string } | null>(null);
+
+    useEffect(() => {
+        const getUserInfo = async () => {
+            try {
+                const userInfoStr = await AsyncStorage.getItem('userInfo');
+                console.log('userInfoStr Profile:', userInfoStr); // <-- Xem trên log!
+                if (userInfoStr) {
+                    const userInfo = JSON.parse(userInfoStr);
+                    setUser({
+                        account: userInfo.account ?? '',
+                        fullName: userInfo.fullName ?? '',   // chữ F hoa
+                    });
+                }
+            } catch (error) {
+                setUser(null);
+            }
+        };
+        getUserInfo();
+    }, []);
 
     const confirmLogout = () => {
         Alert.alert(
@@ -26,7 +50,8 @@ export default function Profile() {
                     text: 'Đồng ý',
                     onPress: async () => {
                         await AsyncStorage.removeItem('userToken');
-                        setLoggedIn(false); // ✅ Quay về AuthStack
+                        await AsyncStorage.removeItem('userInfo');
+                        setLoggedIn(false);
                     },
                 },
             ],
@@ -38,31 +63,35 @@ export default function Profile() {
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContainer}>
                 <Text style={styles.header}>Cài đặt tài khoản</Text>
-
                 <TouchableOpacity style={styles.profileCard}>
                     <Image
                         source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }}
                         style={styles.avatar}
                     />
                     <View style={styles.userInfo}>
-                        <Text style={styles.name}>Sabohiddin</Text>
-                        <Text style={styles.subtitle}>Digital goodies designer - Pixsellz</Text>
+                        <Text style={styles.name}>
+                            {user && user.account && user.account.length > 0 ? user.account : 'Không có tên tài khoản'}
+                        </Text>
+                        <Text style={styles.subtitle}>
+                            {user && user.fullName && user.fullName.length > 0 ? user.fullName : ''}
+                        </Text>
                     </View>
                     <MaterialIcons name="chevron-right" size={24} color="#ccc" />
                 </TouchableOpacity>
-
-                <View style={styles.menuItem}>
+                {/* Mục Tài khoản */}
+                <TouchableOpacity
+                    style={styles.menuItem}
+                    onPress={() => navigation.navigate('UpdateUserScreen')}
+                >
                     <MaterialIcons name="person" size={20} color="#1976D2" />
                     <Text style={styles.menuText}>Tài khoản</Text>
                     <MaterialIcons name="chevron-right" size={20} color="#ccc" style={styles.rightIcon} />
-                </View>
-
+                </TouchableOpacity>
                 <View style={styles.menuItem}>
                     <MaterialCommunityIcons name="bell-ring" size={20} color="#F44336" />
                     <Text style={styles.menuText}>Thông báo</Text>
                     <MaterialIcons name="chevron-right" size={20} color="#ccc" style={styles.rightIcon} />
                 </View>
-
                 <TouchableOpacity style={styles.menuItem} onPress={confirmLogout}>
                     <MaterialCommunityIcons name="power" size={20} color="#D32F2F" />
                     <Text style={[styles.menuText, { color: '#D32F2F' }]}>Đăng xuất</Text>

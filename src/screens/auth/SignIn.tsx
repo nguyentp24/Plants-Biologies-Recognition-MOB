@@ -1,7 +1,12 @@
+<<<<<<< HEAD
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ActivityIndicator, Alert
 } from 'react-native';
+=======
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ActivityIndicator } from 'react-native';
+>>>>>>> 3f25396 (Update Profile, Biology details)
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -19,11 +24,19 @@ export default function SignIn() {
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const { setLoggedIn } = useAuth();
 
+<<<<<<< HEAD
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+=======
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [rememberMe, setRememberMe] = useState(false);
+    const [loading, setLoading] = useState(false);
+>>>>>>> 3f25396 (Update Profile, Biology details)
 
   // Google Auth
 WebBrowser.maybeCompleteAuthSession();
@@ -69,6 +82,7 @@ const [request, response, promptAsync] = Google.useAuthRequest({
     [setLoggedIn]
   );
 
+<<<<<<< HEAD
   // ✅ useEffect to trigger Google login
   useEffect(() => {
     if (response?.type === 'success') {
@@ -85,6 +99,58 @@ const [request, response, promptAsync] = Google.useAuthRequest({
 
     setLoading(true);
     setError('');
+=======
+        setLoading(true);
+        setError(''); // Reset error before the API call
+
+        try {
+            const response = await fetch('https://bilogieseducationapp.onrender.com/api/Authentication/login', {
+                method: 'POST',
+                headers: {
+                    'Accept': '*/*',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    identifier: email,  // Thay thế "account" thành "identifier"
+                    password: password,
+                }),
+            });
+
+            // Kiểm tra mã trạng thái HTTP
+            if (!response.ok) {
+                throw new Error('Đăng nhập thất bại. Vui lòng thử lại.');
+            }
+
+            const data = await response.json();
+
+            // Kiểm tra nếu có token trong dữ liệu trả về
+            if (data.token) {
+                // Lưu token vào AsyncStorage
+                await AsyncStorage.setItem('userToken', data.token);
+                // Lưu thông tin user vào AsyncStorage (CHUẨN KEY TỪ API)
+                await AsyncStorage.setItem(
+                    'userInfo',
+                    JSON.stringify({
+                        account: data.account,
+                        fullName: data.fullName,
+                        userId: data['user_Id'],
+                    })
+                );
+                const testUser = await AsyncStorage.getItem('userInfo');
+                console.log('TEST userInfo đã lưu:', testUser);
+                setLoggedIn(true);
+                setLoading(false);
+            } else {
+                setError('Đăng nhập thất bại. Vui lòng thử lại.');
+                setLoading(false);
+            }
+        } catch (e) {
+            console.error('Đăng nhập lỗi:', e);
+            setError('Đăng nhập thất bại. Vui lòng thử lại.');
+            setLoading(false);
+        }
+    };
+>>>>>>> 3f25396 (Update Profile, Biology details)
 
     try {
       const response = await fetch('https://bilogieseducationapp.onrender.com/api/Authentication/login', {
@@ -129,6 +195,7 @@ const [request, response, promptAsync] = Google.useAuthRequest({
 
       <Text style={styles.title}>Sign in</Text>
 
+<<<<<<< HEAD
       <Text style={styles.label}>Account</Text>
       <TextInput
         style={styles.input}
@@ -136,6 +203,16 @@ const [request, response, promptAsync] = Google.useAuthRequest({
         value={email}
         onChangeText={setEmail}
       />
+=======
+            {/* Sign in Button */}
+            <TouchableOpacity style={styles.button} onPress={handleSignIn} disabled={loading}>
+                {loading ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                    <Text style={styles.buttonText}>Sign in</Text>
+                )}
+            </TouchableOpacity>
+>>>>>>> 3f25396 (Update Profile, Biology details)
 
       <Text style={styles.label}>Password</Text>
       <TextInput
