@@ -11,7 +11,7 @@ export default function Recognition() {
     const pickImage = async () => {
         const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (!permission.granted) {
-            Alert.alert('Bạn cần cấp quyền truy cập ảnh');
+            Alert.alert('You need to grant image access');
             return;
         }
 
@@ -51,7 +51,7 @@ export default function Recognition() {
             if (Array.isArray(data) && data.length > 0) setInfo(data[0]);
             else setInfo(null);
         } catch (err) {
-            Alert.alert('Lỗi', 'Không nhận diện được');
+            Alert.alert('Error', 'Not recognized!');
         } finally {
             setLoading(false);
         }
@@ -60,10 +60,10 @@ export default function Recognition() {
     return (
         <ScrollView style={styles.container}>
             <Text style={styles.title}>Biology Recognition App</Text>
-            <Text style={styles.subtitle}>Nhận diện và tìm hiểu sinh vật</Text>
+            <Text style={styles.subtitle}>Identify and learn about Biologies</Text>
 
             <TouchableOpacity style={styles.button} onPress={pickImage}>
-                <Text style={styles.buttonText}>Chọn ảnh</Text>
+                <Text style={styles.buttonText}>📸 Select image </Text>
             </TouchableOpacity>
 
             {image && (
@@ -75,7 +75,7 @@ export default function Recognition() {
 
             {image && (
                 <TouchableOpacity style={styles.detectButton} onPress={recognize}>
-                    <Text style={styles.buttonText}>Nhận diện sinh vật</Text>
+                    <Text style={styles.buttonText}>🚀 Identify creatures </Text>
                 </TouchableOpacity>
             )}
 
@@ -83,20 +83,20 @@ export default function Recognition() {
 
             {name && (
                 <View style={styles.resultBox}>
-                    <Text style={styles.success}>Nhận diện thành công!</Text>
-                    <Text style={styles.label}>Kết quả nhận diện:</Text>
-                    <Text style={styles.name}> {name}</Text>
+                    <Text style={styles.success}>✅ Recognize success!</Text>
+                    <Text style={styles.label}>🎯 Identification results:</Text>
+                    <Text style={styles.name}>🐾 {name}</Text>
                 </View>
             )}
 
             {info && (
                 <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>Thông tin sinh vật</Text>
+                    <Text style={styles.sectionTitle}>📚 Biological information</Text>
 
-                    <Text style={styles.item}><Text style={styles.bold}>🐾 Tên thường gọi:</Text> {info.commonName}</Text>
-                    <Text style={styles.item}><Text style={styles.bold}>🔬 Tên khoa học:</Text> {info.scientificName}</Text>
-                    <Text style={styles.item}><Text style={styles.bold}>🏷️ Loài:</Text> {info.specieType}</Text>
-                    <Text style={styles.item}><Text style={styles.bold}>📝 Mô tả:</Text> {info.description}</Text>
+                    <Text style={styles.item}><Text style={styles.bold}>🐾 Common name:</Text> {info.commonName}</Text>
+                    <Text style={styles.item}><Text style={styles.bold}>🔬 Scientific name:</Text> {info.scientificName}</Text>
+                    <Text style={styles.item}><Text style={styles.bold}>🏷️ Species:</Text> {info.specieType}</Text>
+                    <Text style={styles.item}><Text style={styles.bold}>📝 Describe:</Text> {info.description}</Text>
                     <Text style={styles.item}><Text style={styles.bold}>🌍 Môi trường sống:</Text> {info.habitat}</Text>
                     <Text style={styles.item}><Text style={styles.bold}>⏰ Tuổi thọ:</Text> {info.averageLifeSpan}</Text>
                     <Text style={styles.item}><Text style={styles.bold}>📅 Được phát hiện:</Text> {info.discoveredAt}</Text>
