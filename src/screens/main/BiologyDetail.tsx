@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView } from 'react-native';
+import { recordAccess } from '../../config/recordAccess'; // Adjust the import path as necessary
 
 type Biology = {
   id: string;
@@ -25,6 +26,10 @@ type Props = {
 
 export default function BiologyDetail({ route }: Props) {
   const { biology } = route.params;
+
+  useEffect(() => {
+    recordAccess(biology.id);
+  }, [biology.id]);
 
   return (
     <ScrollView style={styles.container}>

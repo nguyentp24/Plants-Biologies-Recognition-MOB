@@ -47,7 +47,7 @@ export default function BiologySearch() {
         try {
             const token = await AsyncStorage.getItem('userToken');
             if (!token) {
-                setError('Không tìm thấy token. Vui lòng đăng nhập lại.');
+                setError('Token not found. Please login again.');
                 setLoading(false);
                 return;
             }
@@ -88,7 +88,7 @@ export default function BiologySearch() {
         <ScrollView style={styles.container}>
             <TextInput
                 style={styles.input}
-                placeholder="Tìm theo tên thường gọi hoặc tên khoa học..."
+                placeholder="Search by common name or scientific name..."
                 placeholderTextColor="#888"
                 value={searchTerm}
                 onChangeText={setSearchTerm}
@@ -97,14 +97,14 @@ export default function BiologySearch() {
             {loading ? (
                 <View style={styles.center}>
                     <ActivityIndicator size="large" color="#4CAF50" />
-                    <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
+                    <Text style={styles.loadingText}>Loading data...</Text>
                 </View>
             ) : error ? (
                 <View style={styles.center}>
                     <Text style={styles.errorText}>{error}</Text>
                 </View>
             ) : biologies.length === 0 ? (
-                <Text style={styles.noResult}>Không tìm thấy bản ghi nào.</Text>
+                <Text style={styles.noResult}>No records found.</Text>
             ) : (
                 biologies.map((item) => (
                     <TouchableOpacity

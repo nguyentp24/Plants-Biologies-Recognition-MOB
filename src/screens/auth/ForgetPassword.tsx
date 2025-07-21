@@ -135,7 +135,7 @@ export default function ForgetPassword() {
 
                     {/* Header */}
                     <LinearGradient
-                        colors={['#FFD700', '#D4A017']}
+                        colors={['#ff4000ff', '#D4A017']}
                         style={styles.headerGradient}
                     >
                         <Text style={styles.header}>Đăng nhập</Text>

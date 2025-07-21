@@ -50,6 +50,7 @@ export default function SignIn() {
         // Lưu token vào AsyncStorage
         await AsyncStorage.setItem('userToken', data.token);
         // Lưu thông tin user vào AsyncStorage (CHUẨN KEY TỪ API)
+        await AsyncStorage.setItem('userId', data.user_Id);
         await AsyncStorage.setItem(
           'userInfo',
           JSON.stringify({
@@ -63,12 +64,12 @@ export default function SignIn() {
         setLoggedIn(true);
         setLoading(false);
       } else {
-        setError('Đăng nhập thất bại. Vui lòng thử lại.');
+        setError('Login failed. Please try again.');
         setLoading(false);
       }
     } catch (e) {
       console.error('Đăng nhập lỗi:', e);
-      setError('Đăng nhập thất bại. Vui lòng thử lại.');
+      setError('Login failed. Please try again.');
       setLoading(false);
     }
   };
@@ -128,7 +129,7 @@ export default function SignIn() {
       </TouchableOpacity>
 
       {/* Forgot Password */}
-      <TouchableOpacity onPress={() => console.log('Forgot password pressed')}>
+      <TouchableOpacity onPress={() => navigation.navigate('ForgetPass')}>
         <Text style={styles.forgotPassword}>Forgot your password?</Text>
       </TouchableOpacity>
 

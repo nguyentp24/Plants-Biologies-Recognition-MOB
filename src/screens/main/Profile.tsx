@@ -25,12 +25,12 @@ export default function Profile() {
         const getUserInfo = async () => {
             try {
                 const userInfoStr = await AsyncStorage.getItem('userInfo');
-                console.log('userInfoStr Profile:', userInfoStr); // <-- Xem trên log!
+                console.log('userInfoStr Profile:', userInfoStr);
                 if (userInfoStr) {
                     const userInfo = JSON.parse(userInfoStr);
                     setUser({
                         account: userInfo.account ?? '',
-                        fullName: userInfo.fullName ?? '',   // chữ F hoa
+                        fullName: userInfo.fullName ?? '',
                     });
                 }
             } catch (error) {
@@ -42,12 +42,12 @@ export default function Profile() {
 
     const confirmLogout = () => {
         Alert.alert(
-            'Xác nhận',
-            'Bạn có chắc chắn muốn đăng xuất?',
+            'Confirm',
+            'Are you sure you want to log out?',
             [
-                { text: 'Hủy', style: 'cancel' },
+                { text: 'Cancel', style: 'cancel' },
                 {
-                    text: 'Đồng ý',
+                    text: 'Agree',
                     onPress: async () => {
                         await AsyncStorage.removeItem('userToken');
                         await AsyncStorage.removeItem('userInfo');
@@ -62,7 +62,7 @@ export default function Profile() {
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContainer}>
-                <Text style={styles.header}>Cài đặt tài khoản</Text>
+                <Text style={styles.header}>Account settings</Text>
                 <TouchableOpacity style={styles.profileCard}>
                     <Image
                         source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }}
@@ -70,7 +70,7 @@ export default function Profile() {
                     />
                     <View style={styles.userInfo}>
                         <Text style={styles.name}>
-                            {user && user.account && user.account.length > 0 ? user.account : 'Không có tên tài khoản'}
+                            {user && user.account && user.account.length > 0 ? user.account : 'No account name!'}
                         </Text>
                         <Text style={styles.subtitle}>
                             {user && user.fullName && user.fullName.length > 0 ? user.fullName : ''}
@@ -84,17 +84,17 @@ export default function Profile() {
                     onPress={() => navigation.navigate('UpdateUserScreen')}
                 >
                     <MaterialIcons name="person" size={20} color="#1976D2" />
-                    <Text style={styles.menuText}>Tài khoản</Text>
+                    <Text style={styles.menuText}>Account</Text>
                     <MaterialIcons name="chevron-right" size={20} color="#ccc" style={styles.rightIcon} />
                 </TouchableOpacity>
                 <View style={styles.menuItem}>
                     <MaterialCommunityIcons name="bell-ring" size={20} color="#F44336" />
-                    <Text style={styles.menuText}>Thông báo</Text>
+                    <Text style={styles.menuText}>Notification</Text>
                     <MaterialIcons name="chevron-right" size={20} color="#ccc" style={styles.rightIcon} />
                 </View>
                 <TouchableOpacity style={styles.menuItem} onPress={confirmLogout}>
                     <MaterialCommunityIcons name="power" size={20} color="#D32F2F" />
-                    <Text style={[styles.menuText, { color: '#D32F2F' }]}>Đăng xuất</Text>
+                    <Text style={[styles.menuText, { color: '#D32F2F' }]}>Log out</Text>
                     <MaterialIcons name="chevron-right" size={20} color="#ccc" style={styles.rightIcon} />
                 </TouchableOpacity>
             </ScrollView>

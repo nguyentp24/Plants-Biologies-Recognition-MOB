@@ -14,7 +14,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 export default function UpdateUserScreen() {
   const [account, setAccount] = useState('');
-  const [email, setEmail] = useState('');           // Thêm state email
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('Student');
   const [fullName, setFullName] = useState('');
@@ -29,7 +29,7 @@ export default function UpdateUserScreen() {
         const userInfo = JSON.parse(userInfoStr);
         setAccount(userInfo.account || '');
         setFullName(userInfo.fullName || '');
-        setEmail(userInfo.email || '');            // Lấy email nếu có
+        setEmail(userInfo.email || '');
       }
     };
     fetchUserInfo();
@@ -57,7 +57,7 @@ export default function UpdateUserScreen() {
 
       const body = {
         account,
-        email,                  // Truyền email vào body
+        email,
         password,
         role,
         fullName,
@@ -79,7 +79,7 @@ export default function UpdateUserScreen() {
       const data = await response.json();
 
       if (!response.ok) {
-        let errMsg = 'Cập nhật thất bại.';
+        let errMsg = 'Update failed.';
         if (data && typeof data === 'object') {
           errMsg = data.message || JSON.stringify(data);
         } else if (typeof data === 'string') {
@@ -89,10 +89,10 @@ export default function UpdateUserScreen() {
       }
 
       // THÀNH CÔNG
-      console.log('Update thành công:', data);
-      Alert.alert('Thành công', data.message || 'Cập nhật thành công!');
+      console.log('Update successful:', data);
+      Alert.alert('Success', data.message || 'Update successful!');
     } catch (err) {
-      let msg = 'Đã xảy ra lỗi.';
+      let msg = 'An error occurred.';
       if (err instanceof Error) {
         msg = err.message;
       } else if (typeof err === 'object') {
@@ -116,16 +116,16 @@ export default function UpdateUserScreen() {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.header}>Cập nhật thông tin người dùng</Text>
+        <Text style={styles.header}>Update user information</Text>
 
         {/* Account */}
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Tài khoản</Text>
+          <Text style={styles.label}>Account</Text>
           <TextInput
             value={account}
             onChangeText={setAccount}
             style={styles.input}
-            placeholder="Nhập tài khoản"
+            placeholder="Enter account"
             placeholderTextColor="#9ca3af"
           />
         </View>
@@ -137,7 +137,7 @@ export default function UpdateUserScreen() {
             value={email}
             onChangeText={setEmail}
             style={styles.input}
-            placeholder="Nhập email"
+            placeholder="Enter email"
             placeholderTextColor="#9ca3af"
             keyboardType="email-address"
             autoCapitalize="none"
@@ -146,32 +146,32 @@ export default function UpdateUserScreen() {
 
         {/* Password */}
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Mật khẩu</Text>
+          <Text style={styles.label}>Password</Text>
           <TextInput
             value={password}
             onChangeText={setPassword}
             style={styles.input}
             secureTextEntry
-            placeholder="Nhập mật khẩu"
+            placeholder="Enter Password"
             placeholderTextColor="#9ca3af"
           />
         </View>
 
         {/* Full Name */}
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Họ tên</Text>
+          <Text style={styles.label}>Full name</Text>
           <TextInput
             value={fullName}
             onChangeText={setFullName}
             style={styles.input}
-            placeholder="Tên đầy đủ"
+            placeholder="Full name"
             placeholderTextColor="#9ca3af"
           />
         </View>
 
         {/* Role */}
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Vai trò</Text>
+          <Text style={styles.label}>Role</Text>
           <TextInput
             value={role}
             editable={false}
@@ -183,12 +183,12 @@ export default function UpdateUserScreen() {
 
         {/* Status */}
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Trạng thái</Text>
+          <Text style={styles.label}>Status</Text>
           <TextInput
-            value={isActive ? 'Hoạt động' : 'Không hoạt động'}
+            value={isActive ? 'Active' : 'Inactive'}
             editable={false}
             style={[styles.input, styles.disabledInput]}
-            placeholder="Hoạt động hoặc Không hoạt động"
+            placeholder="Active or Inactive"
             placeholderTextColor="#9ca3af"
           />
         </View>
@@ -200,7 +200,7 @@ export default function UpdateUserScreen() {
           disabled={loading}
         >
           <Text style={styles.buttonText}>
-            {loading ? 'Đang cập nhật...' : 'Cập nhật thông tin'}
+            {loading ? 'Updating...' : 'Update information'}
           </Text>
         </TouchableOpacity>
       </View>
