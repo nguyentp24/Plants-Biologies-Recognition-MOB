@@ -63,7 +63,7 @@ export default function Recognition() {
             <Text style={styles.subtitle}>Nhận diện và tìm hiểu sinh vật</Text>
 
             <TouchableOpacity style={styles.button} onPress={pickImage}>
-                <Text style={styles.buttonText}>📸 Chọn ảnh</Text>
+                <Text style={styles.buttonText}>Chọn ảnh</Text>
             </TouchableOpacity>
 
             {image && (
@@ -75,7 +75,7 @@ export default function Recognition() {
 
             {image && (
                 <TouchableOpacity style={styles.detectButton} onPress={recognize}>
-                    <Text style={styles.buttonText}>🚀 Nhận diện sinh vật</Text>
+                    <Text style={styles.buttonText}>Nhận diện sinh vật</Text>
                 </TouchableOpacity>
             )}
 
@@ -83,15 +83,15 @@ export default function Recognition() {
 
             {name && (
                 <View style={styles.resultBox}>
-                    <Text style={styles.success}>✅ Nhận diện thành công!</Text>
-                    <Text style={styles.label}>🎯 Kết quả nhận diện:</Text>
-                    <Text style={styles.name}>🐾 {name}</Text>
+                    <Text style={styles.success}>Nhận diện thành công!</Text>
+                    <Text style={styles.label}>Kết quả nhận diện:</Text>
+                    <Text style={styles.name}> {name}</Text>
                 </View>
             )}
 
             {info && (
                 <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>📚 Thông tin sinh vật</Text>
+                    <Text style={styles.sectionTitle}>Thông tin sinh vật</Text>
 
                     <Text style={styles.item}><Text style={styles.bold}>🐾 Tên thường gọi:</Text> {info.commonName}</Text>
                     <Text style={styles.item}><Text style={styles.bold}>🔬 Tên khoa học:</Text> {info.scientificName}</Text>
