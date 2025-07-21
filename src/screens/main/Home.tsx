@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Modal, Pressable, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { recordBookAccess } from 'src/config/bookAccess';
 
 export default function Home() {
     const navigation = useNavigation();
@@ -12,6 +13,7 @@ export default function Home() {
     const [selectedChapter, setSelectedChapter] = useState<any | null>(null);
     const [showModal, setShowModal] = useState(false);
     const [loadingBooks, setLoadingBooks] = useState(false);
+    const [accessingBook, setAccessingBook] = useState(false);
 
     // Fetch books data from the API
     const fetchBooks = async () => {
@@ -68,14 +70,25 @@ export default function Home() {
         }
     }, [selectedBook]);
 
-    const handleBookSelect = (book: any) => {
-        setSelectedBook(book);
-        setShowModal(false);
-    };
+    const handleBookSelect = async (book: any) => {
+    setAccessingBook(true);
+    setSelectedBook(book);
+    setShowModal(false);
+
+    try {
+        await recordBookAccess(book.book_Id);
+    } catch (e) {
+        console.warn('Failed to record book access');
+    } finally {
+        setAccessingBook(false);
+    }
+};
 
     const toggleChapter = (chapterId: string) => {
         setSelectedChapter(selectedChapter?.chapter_Id === chapterId ? null : { ...selectedChapter, chapter_Id: chapterId });
     };
+
+
 
     return (
         <View style={styles.container}>
