@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../types/navigation';
@@ -9,7 +9,7 @@ export default function SignUp() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [role, setRole] = useState('Student'); // Default role
+    const [role, setRole] = useState('Student');
     const [error, setError] = useState('');
 
     const handleSignUp = async () => {
@@ -19,7 +19,6 @@ export default function SignUp() {
         }
 
         try {
-            // Gửi request tới API đăng ký
             const response = await fetch('https://bilogieseducationapp.onrender.com/api/Authentication/register', {
                 method: 'POST',
                 headers: {
@@ -28,22 +27,25 @@ export default function SignUp() {
                 },
                 body: JSON.stringify({
                     account: email,
+                    email: email,
                     password: password,
                     fullName: name,
                     role: role,
+                    isActive: true,
                 }),
             });
 
-            // Kiểm tra mã phản hồi
+            const data = await response.json();
+
             if (!response.ok) {
-                setError('Đã có lỗi xảy ra. Vui lòng thử lại.');
+                setError(data?.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.');
                 return;
             }
 
-            const data = await response.json();
-
-            if (data.userId) {
-                // Nếu đăng ký thành công, chuyển đến trang đăng nhập
+            if (data.user_Id) {
+                Alert.alert('Đăng ký thành công', 'Hãy đăng nhập để tiếp tục!', [
+                    { text: 'OK', onPress: () => navigation.navigate('SignIn') }
+                ]);
                 navigation.navigate('SignIn');
             } else {
                 setError('Đăng ký thất bại. Vui lòng thử lại.');
@@ -77,7 +79,7 @@ export default function SignUp() {
                 onChangeText={setName}
             />
 
-            {/* Email Input */}
+            {/* Account (Username) Input */}
             <Text style={styles.label}>Account</Text>
             <TextInput
                 style={styles.input}
