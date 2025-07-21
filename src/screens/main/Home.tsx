@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Modal, Pressable, ActivityIndicator } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -26,8 +27,6 @@ export default function Home() {
                 return;
             }
 
-            console.log('Token:', token);  // Check token in console
-
             // API URL để lấy tất cả sách với tiêu đề "Đắc Nhân Tâm nè nè"
             const url = 'https://bilogieseducationapp.onrender.com/api/Book/search';
 
@@ -49,7 +48,6 @@ export default function Home() {
             const approvedBooks = data.filter((book: any) => book.status === 'Approved');
             setBooks(approvedBooks);
         } catch (err) {
-            console.error('Fetch error:', err);
             setError('Unable to load data. Please try again later.');
         } finally {
             setLoadingBooks(false);
@@ -80,17 +78,21 @@ export default function Home() {
     return (
         <View style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContainer}>
-                <Text style={styles.appTitle}>Biology & Plant Sample Learning App</Text>
+                {/* Gradient Header Card */}
+                <LinearGradient colors={["#a8e063", "#56ab2f"]} style={styles.gradientCard}>
+                    {/* Bubbles */}
+                    <View style={[styles.bubble, { top: 10, left: 10, width: 50, height: 50, opacity: 0.18 }]} />
+                    <View style={[styles.bubble, { top: 30, right: 30, width: 40, height: 40, opacity: 0.13 }]} />
+                    <View style={[styles.bubble, { bottom: 10, left: 60, width: 30, height: 30, opacity: 0.10 }]} />
+                    <Text style={styles.visualGreenTitle}>Biologie & Plant Samples <Text style={{ color: '#fff', fontWeight: 'bold' }}>Learning App</Text></Text>
+                    <Text style={styles.visualGreenSubtitle}>Explore the biology plants and animals.</Text>
+                </LinearGradient>
 
-                <View style={styles.header}>
-                    <Text style={styles.welcomeText}>Welcome to Learning Environment</Text>
-                    <Text style={styles.subText}>Explore the Biology of Plants and Animals</Text>
-                </View>
-
+                {/* Section: Book Categories */}
                 <Text style={styles.sectionHeader}>Book Categories</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
                     {loadingBooks ? (
-                        <ActivityIndicator size="large" color="#0000ff" />
+                        <ActivityIndicator size="large" color="#56ab2f" />
                     ) : books.length > 0 ? (
                         books.map((book) => (
                             <View key={book.book_Id} style={styles.card}>
@@ -113,6 +115,7 @@ export default function Home() {
                     )}
                 </ScrollView>
 
+                {/* Section: Select a Book */}
                 <Text style={styles.sectionHeader}>Select a Book to Continue</Text>
                 <View style={styles.selectBookContainer}>
                     <TouchableOpacity
@@ -137,7 +140,7 @@ export default function Home() {
                         <View style={styles.modalContainer}>
                             <Text style={styles.modalTitle}>Select a Book</Text>
                             {loadingBooks ? (
-                                <ActivityIndicator size="large" color="#0000ff" />
+                                <ActivityIndicator size="large" color="#56ab2f" />
                             ) : books.length > 0 ? (
                                 <View style={styles.pickerContainer}>
                                     {books.map((book) => (
@@ -203,33 +206,59 @@ export default function Home() {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#fff' },
-    scrollContainer: { padding: 16 },
-    appTitle: { fontSize: 20, fontWeight: 'bold', color: '#000', alignSelf: 'center', marginBottom: 12, borderWidth: 1, borderColor: '#1e90ff', padding: 10, borderRadius: 6 },
-    header: { marginBottom: 20, alignItems: 'center' },
-    welcomeText: { fontSize: 18, fontWeight: '600', color: '#333' },
-    subText: { fontSize: 14, color: '#777', marginTop: 6 },
-    sectionHeader: { fontSize: 18, fontWeight: 'bold', marginTop: 20, color: '#333' },
-    categoryScroll: { flexDirection: 'row', marginTop: 16 },
-    card: { width: 200, backgroundColor: '#eee', borderRadius: 16, marginRight: 16, padding: 10, alignItems: 'center', position: 'relative' },
-    cardImage: { width: '100%', height: 120, borderRadius: 8 },
-    cardTitle: { fontSize: 16, fontWeight: 'bold', marginTop: 8, textAlign: 'center' },
-    cardSubtitle: { fontSize: 14, color: '#555', marginTop: 4 },
-    learnMoreBtn: { position: 'absolute', top: 10, right: 10, backgroundColor: '#1e90ff', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, zIndex: 1 },
+    scrollContainer: { padding: 0, paddingBottom: 16 },
+    gradientCard: {
+        margin: 16,
+        marginBottom: 18,
+        borderRadius: 18,
+        padding: 22,
+        paddingTop: 30,
+        paddingBottom: 36,
+        overflow: 'hidden',
+        position: 'relative',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+    },
+    bubble: {
+        position: 'absolute',
+        backgroundColor: '#fff',
+        borderRadius: 9999,
+    },
+    visualGreenTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#222',
+        marginBottom: 6,
+        marginTop: 8,
+    },
+    visualGreenSubtitle: {
+        fontSize: 15,
+        color: '#fff',
+        opacity: 0.9,
+        marginBottom: 2,
+    },
+    sectionHeader: { fontSize: 18, fontWeight: 'bold', marginTop: 20, color: '#333', marginLeft: 16, marginBottom: 8 },
+    categoryScroll: { flexDirection: 'row', marginTop: 0, paddingLeft: 16, paddingBottom: 8 },
+    card: { width: 160, backgroundColor: '#eafbe7', borderRadius: 16, marginRight: 16, padding: 10, alignItems: 'center', position: 'relative', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 },
+    cardImage: { width: '100%', height: 80, borderRadius: 8 },
+    cardTitle: { fontSize: 15, fontWeight: 'bold', marginTop: 8, textAlign: 'center', color: '#222' },
+    cardSubtitle: { fontSize: 13, color: '#555', marginTop: 4, textAlign: 'center' },
+    learnMoreBtn: { position: 'absolute', top: 10, right: 10, backgroundColor: '#56ab2f', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, zIndex: 1 },
     learnMoreText: { color: '#fff', fontSize: 12 },
-    selectBookContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 12, justifyContent: 'flex-start' },
-    selectBookBtn: { padding: 10, backgroundColor: '#1e90ff', borderRadius: 8, marginRight: 10 },
+    selectBookContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 12, justifyContent: 'flex-start', paddingHorizontal: 16 },
+    selectBookBtn: { padding: 10, backgroundColor: '#56ab2f', borderRadius: 8, marginRight: 10 },
     selectBookBtnText: { fontSize: 16, color: '#fff' },
     selectBookText: { fontSize: 16, color: '#333', flex: 1, textAlign: 'right' },
     pickerContainer: { padding: 10 },
-    pickerItem: { padding: 12, backgroundColor: '#ddd', borderRadius: 8, marginTop: 8 },
+    pickerItem: { padding: 12, backgroundColor: '#eafbe7', borderRadius: 8, marginTop: 8 },
     pickerItemText: { fontSize: 16, color: '#333' },
-    chapterBtn: { padding: 10, backgroundColor: '#ddd', borderRadius: 8, marginTop: 8 },
+    chapterBtn: { padding: 10, backgroundColor: '#eafbe7', borderRadius: 8, marginTop: 8, marginHorizontal: 16 },
     chapterText: { fontSize: 16, fontWeight: 'bold', color: '#333' },
-    lessonContainer: { marginLeft: 20, marginTop: 10 },
+    lessonContainer: { marginLeft: 36, marginTop: 10 },
     lesson: { fontSize: 14, color: '#777' },
     modalBackground: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' },
     modalContainer: { backgroundColor: '#fff', padding: 20, borderRadius: 10, width: '80%' },
     modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
-    closeButton: { marginTop: 20, backgroundColor: '#1e90ff', paddingVertical: 10, borderRadius: 8 },
+    closeButton: { marginTop: 20, backgroundColor: '#56ab2f', paddingVertical: 10, borderRadius: 8 },
     closeButtonText: { color: '#fff', textAlign: 'center' },
 });

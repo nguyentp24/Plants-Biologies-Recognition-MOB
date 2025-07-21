@@ -1,7 +1,8 @@
 export type AuthStackParamList = {
+    Onboarding: undefined;
     SignIn: undefined;
     SignUp: undefined;
-    ForgotPassword: undefined;
+    ForgetPass: undefined;
 };
 
 export type MainTabParamList = {

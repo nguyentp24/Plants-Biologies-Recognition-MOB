@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ActivityIndicator, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -21,10 +21,8 @@ export default function SignIn() {
       setError('Vui lòng nhập đầy đủ thông tin.');
       return;
     }
-
     setLoading(true);
-    setError(''); // Reset error before the API call
-
+    setError('');
     try {
       const response = await fetch('https://bilogieseducationapp.onrender.com/api/Authentication/login', {
         method: 'POST',
@@ -33,23 +31,16 @@ export default function SignIn() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          identifier: email,  // Thay thế "account" thành "identifier"
+          identifier: email,
           password: password,
         }),
       });
-
-      // Kiểm tra mã trạng thái HTTP
       if (!response.ok) {
         throw new Error('Đăng nhập thất bại. Vui lòng thử lại.');
       }
-
       const data = await response.json();
-
-      // Kiểm tra nếu có token trong dữ liệu trả về
       if (data.token) {
-        // Lưu token vào AsyncStorage
         await AsyncStorage.setItem('userToken', data.token);
-        // Lưu thông tin user vào AsyncStorage (CHUẨN KEY TỪ API)
         await AsyncStorage.setItem('userId', data.user_Id);
         await AsyncStorage.setItem(
           'userInfo',
@@ -59,8 +50,6 @@ export default function SignIn() {
             userId: data['user_Id'],
           })
         );
-        const testUser = await AsyncStorage.getItem('userInfo');
-        console.log('TEST userInfo đã lưu:', testUser);
         setLoggedIn(true);
         setLoading(false);
       } else {
@@ -68,112 +57,200 @@ export default function SignIn() {
         setLoading(false);
       }
     } catch (e) {
-      console.error('Đăng nhập lỗi:', e);
       setError('Login failed. Please try again.');
       setLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      {/* Logo */}
-      <View style={styles.logoSection}>
-        <Image
-          source={{ uri: 'https://via.placeholder.com/150' }} // Placeholder logo
-          style={styles.logo}
+    <View style={styles.screen}>
+      <View style={styles.card}>
+        {/* Logo text */}
+        <Text style={styles.logoText}>BiologiesRecognition</Text>
+        {/* Title */}
+        <Text style={styles.title}>Welcome!</Text>
+        {/* Email Input */}
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor="#bbb"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
         />
-        <Text style={styles.logoText}>PLANT BIOLOGY EDUCATION</Text>
-      </View>
-
-      {/* Title */}
-      <Text style={styles.title}>Sign in</Text>
-
-      {/* Email Input with label */}
-      <Text style={styles.label}>Account</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Username"
-        value={email}
-        onChangeText={setEmail}
-      />
-
-      {/* Password Input with label */}
-      <Text style={styles.label}>Password</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-
-      {/* Remember me Checkbox */}
-      <View style={styles.rememberMeSection}>
-        <TouchableOpacity onPress={() => setRememberMe(!rememberMe)}>
-          <Text style={styles.rememberMeText}>
-            {rememberMe ? '☑ Remember me' : '⬜ Remember me'}
-          </Text>
+        {/* Password Input */}
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          placeholderTextColor="#bbb"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
+        {/* Remember me */}
+        <TouchableOpacity style={styles.rememberMeSection} onPress={() => setRememberMe(!rememberMe)}>
+          <Text style={styles.rememberMeText}>{rememberMe ? '☑' : '⬜'} Remember me</Text>
         </TouchableOpacity>
+        {/* Error message */}
+        {error !== '' && <Text style={styles.error}>{error}</Text>}
+        {/* Login Button */}
+        <TouchableOpacity style={styles.button} onPress={handleSignIn} disabled={loading}>
+          {loading ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Login</Text>
+          )}
+        </TouchableOpacity>
+        {/* Forgot Password */}
+        <TouchableOpacity onPress={() => navigation.navigate('ForgetPass')}>
+          <Text style={styles.forgotPassword}>Forgot password?</Text>
+        </TouchableOpacity>
+        {/* Social Login */}
+        <View style={styles.socialRow}>
+          <TouchableOpacity style={[styles.socialButton, { flex: 1, maxWidth: '100%' }]} onPress={() => {}}>
+            <Image source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/4/4a/Logo_2013_Google.png' }} style={styles.socialIcon} />
+            <Text style={styles.socialText}>Google</Text>
+          </TouchableOpacity>
+        </View>
+        {/* Sign up link */}
+        <View style={styles.signupRow}>
+          <Text style={styles.signupText}>Don't have an account? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+            <Text style={styles.signupLink}>Sign Up</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-
-      {/* Error message */}
-      {error !== '' && <Text style={styles.error}>{error}</Text>}
-
-      {/* Sign in Button */}
-      <TouchableOpacity style={styles.button} onPress={handleSignIn} disabled={loading}>
-        {loading ? (
-          <ActivityIndicator size="small" color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Sign in</Text>
-        )}
-      </TouchableOpacity>
-
-      {/* Forgot Password */}
-      <TouchableOpacity onPress={() => navigation.navigate('ForgetPass')}>
-        <Text style={styles.forgotPassword}>Forgot your password?</Text>
-      </TouchableOpacity>
-
-      {/* Google Sign in */}
-      <TouchableOpacity style={styles.googleButton} onPress={() => console.log('Google sign in pressed')}>
-        <Text style={styles.googleButtonText}>Sign in with Google</Text>
-      </TouchableOpacity>
-
-      {/* Sign up */}
-      <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-        <Text style={styles.link}>Don't have an account? Sign up</Text>
-      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center', backgroundColor: '#fff' },
-  logoSection: { alignItems: 'center', marginBottom: 40 },
-  logo: { width: 80, height: 80, borderRadius: 10, marginBottom: 10 },
-  logoText: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: '#333' },
-  label: { fontSize: 14, fontWeight: '500', color: '#333', marginBottom: 8, marginLeft: 10 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-    marginHorizontal: 10,
-  },
-  rememberMeSection: { marginBottom: 10, alignItems: 'flex-start' },
-  rememberMeText: { fontSize: 14, color: '#444' },
-  error: { color: 'red', marginBottom: 10, textAlign: 'center' },
-  button: { backgroundColor: '#4CAF50', padding: 14, borderRadius: 8, alignItems: 'center' },
-  buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  forgotPassword: { textAlign: 'center', color: '#1e90ff', fontSize: 14, marginTop: 10 },
-  googleButton: {
-    backgroundColor: '#4285F4',
-    padding: 14,
-    borderRadius: 8,
-    marginTop: 20,
+  screen: {
+    flex: 1,
+    backgroundColor: '#f5f6fa',
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  googleButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  link: { marginTop: 20, textAlign: 'center', color: '#1e90ff', fontSize: 14 },
+  card: {
+    width: '90%',
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    paddingVertical: 32,
+    paddingHorizontal: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+    alignItems: 'center',
+  },
+  logoText: {
+    fontFamily: 'cursive',
+    color: '#2e8b57',
+    fontSize: 32,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#222',
+    marginBottom: 24,
+  },
+  input: {
+    width: '100%',
+    backgroundColor: '#f2f3f7',
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    marginBottom: 14,
+    borderWidth: 0,
+    color: '#222',
+  },
+  rememberMeSection: {
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+  rememberMeText: {
+    fontSize: 14,
+    color: '#888',
+  },
+  error: {
+    color: 'red',
+    marginBottom: 10,
+    textAlign: 'center',
+    width: '100%',
+  },
+  button: {
+    width: '100%',
+    backgroundColor: '#2e8b57',
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 8,
+    shadowColor: '#2e8b57',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  forgotPassword: {
+    color: '#2e8b57',
+    fontSize: 14,
+    marginTop: 8,
+    marginBottom: 16,
+    alignSelf: 'center',
+  },
+  socialRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  socialButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f2f3f7',
+    borderRadius: 10,
+    paddingVertical: 10,
+    justifyContent: 'center',
+    marginHorizontal: 4,
+  },
+  socialIcon: {
+    width: 22,
+    height: 22,
+    marginRight: 8,
+    resizeMode: 'contain',
+  },
+  socialText: {
+    fontSize: 15,
+    color: '#222',
+    fontWeight: '500',
+  },
+  signupRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  signupText: {
+    color: '#888',
+    fontSize: 14,
+  },
+  signupLink: {
+    color: '#2e8b57',
+    fontWeight: 'bold',
+    fontSize: 14,
+    marginLeft: 2,
+  },
 });

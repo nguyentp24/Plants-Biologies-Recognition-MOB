@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, Alert, ActivityIndicator, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Recognition() {
     const [image, setImage] = useState(null);
     const [loading, setLoading] = useState(false);
     const [name, setName] = useState('');
     const [info, setInfo] = useState(null);
+     const [error, setError] = useState('');
 
     const pickImage = async () => {
         const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -35,6 +37,13 @@ export default function Recognition() {
         });
 
         try {
+           const token = await AsyncStorage.getItem('userToken');
+            if (!token) {
+                setError('Token not found. Please login again.');
+                return;
+            }
+
+            console.log('Token:', token);  // Check token in console
             const res = await fetch('https://bilogieseducationapp.onrender.com/api/Predict/upload', {
                 method: 'POST',
                 headers: { 'Content-Type': 'multipart/form-data' },
@@ -45,11 +54,20 @@ export default function Recognition() {
             const label = result?.[0]?.name;
             setName(label);
 
+            console.log(label);
+
             // Fetch biology info
-            const res2 = await fetch(`https://bilogieseducationapp.onrender.com/api/Biologies/search?input=${encodeURIComponent(label)}`);
-            const data = await res2.json();
+           const res2 = await fetch(`https://plants-biologies.onrender.com/api/Biologies/search?input=${encodeURIComponent(label)}`, {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+    },
+});            const data = await res2.json();
+            console.log("Search result:", data);
             if (Array.isArray(data) && data.length > 0) setInfo(data[0]);
-            else setInfo(null);
+            else {
+                Alert.alert("Không tìm thấy thông tin sinh vật")
+                setInfo(null);}
         } catch (err) {
             Alert.alert('Lỗi', 'Không nhận diện được');
         } finally {
@@ -63,19 +81,19 @@ export default function Recognition() {
             <Text style={styles.subtitle}>Nhận diện và tìm hiểu sinh vật</Text>
 
             <TouchableOpacity style={styles.button} onPress={pickImage}>
-                <Text style={styles.buttonText}>Chọn ảnh</Text>
+                <Text style={styles.buttonText}>Upload Image</Text>
             </TouchableOpacity>
 
             {image && (
                 <View style={styles.imageBox}>
                     <Image source={{ uri: image.uri }} style={styles.image} />
-                    <Text style={styles.size}>Kích thước: {image.width} x {image.height}</Text>
+                    <Text style={styles.size}>Size: {image.width} x {image.height}</Text>
                 </View>
             )}
 
             {image && (
                 <TouchableOpacity style={styles.detectButton} onPress={recognize}>
-                    <Text style={styles.buttonText}>Nhận diện sinh vật</Text>
+                    <Text style={styles.buttonText}>Recognize Biology</Text>
                 </TouchableOpacity>
             )}
 
@@ -83,15 +101,15 @@ export default function Recognition() {
 
             {name && (
                 <View style={styles.resultBox}>
-                    <Text style={styles.success}>Nhận diện thành công!</Text>
-                    <Text style={styles.label}>Kết quả nhận diện:</Text>
+                    <Text style={styles.success}>Succesfully</Text>
+                    <Text style={styles.label}>Result:</Text>
                     <Text style={styles.name}> {name}</Text>
                 </View>
             )}
 
             {info && (
                 <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>Thông tin sinh vật</Text>
+                    <Text style={styles.sectionTitle}>Biology details</Text>
 
                     <Text style={styles.item}><Text style={styles.bold}>🐾 Tên thường gọi:</Text> {info.commonName}</Text>
                     <Text style={styles.item}><Text style={styles.bold}>🔬 Tên khoa học:</Text> {info.scientificName}</Text>
@@ -100,7 +118,7 @@ export default function Recognition() {
                     <Text style={styles.item}><Text style={styles.bold}>🌍 Môi trường sống:</Text> {info.habitat}</Text>
                     <Text style={styles.item}><Text style={styles.bold}>⏰ Tuổi thọ:</Text> {info.averageLifeSpan}</Text>
                     <Text style={styles.item}><Text style={styles.bold}>📅 Được phát hiện:</Text> {info.discoveredAt}</Text>
-                    <Text style={[styles.status, { backgroundColor: info.isExtinct ? '#e74c3c' : '#2ecc71' }]}>
+                    <Text style={[styles.status, { backgroundColor: info.isExtinct ? '#e74c3c' : '#047857' }]}>
                         {info.isExtinct ? '⚠️ Tuyệt chủng' : '✅ Còn tồn tại'}
                     </Text>
                 </View>
@@ -113,8 +131,8 @@ const styles = StyleSheet.create({
     container: { padding: 20, backgroundColor: '#f4f6f8' },
     title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginVertical: 10 },
     subtitle: { fontSize: 14, textAlign: 'center', marginBottom: 20, color: '#666' },
-    button: { backgroundColor: '#3498db', padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 10 },
-    detectButton: { backgroundColor: '#2ecc71', padding: 12, borderRadius: 10, alignItems: 'center', marginTop: 10 },
+    button: { backgroundColor: '#047857', padding: 12, borderRadius: 10, alignItems: 'center', marginBottom: 10 },
+    detectButton: { backgroundColor: '#047857', padding: 12, borderRadius: 10, alignItems: 'center', marginTop: 10 },
     buttonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
     imageBox: { alignItems: 'center', marginVertical: 10 },
     image: { width: 250, height: 250, borderRadius: 10 },

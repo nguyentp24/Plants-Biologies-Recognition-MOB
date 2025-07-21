@@ -7,6 +7,9 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -89,7 +92,6 @@ export default function UpdateUserScreen() {
       }
 
       // THÀNH CÔNG
-      console.log('Update successful:', data);
       Alert.alert('Success', data.message || 'Update successful!');
     } catch (err) {
       let msg = 'An error occurred.';
@@ -107,92 +109,91 @@ export default function UpdateUserScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* Nút back - đặt ngoài card */}
-      <View style={styles.backContainer}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <MaterialIcons name="arrow-back" size={26} color="#047857" />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.header}>Update user information</Text>
-
-        {/* Account */}
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Account</Text>
-          <TextInput
-            value={account}
-            onChangeText={setAccount}
-            style={styles.input}
-            placeholder="Enter account"
-            placeholderTextColor="#9ca3af"
-          />
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: '#fff' }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        {/* Header row */}
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <MaterialIcons name="arrow-back" size={26} color="#222" />
+          </TouchableOpacity>
+          <Text style={styles.header}>Edit Profile</Text>
+          <View style={{ width: 32 }} />
         </View>
-
-        {/* Email */}
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            style={styles.input}
-            placeholder="Enter email"
-            placeholderTextColor="#9ca3af"
-            keyboardType="email-address"
-            autoCapitalize="none"
+        {/* Avatar with camera icon */}
+        <View style={styles.avatarContainer}>
+          <Image
+            source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }}
+            style={styles.avatar}
           />
+          <TouchableOpacity style={styles.cameraIcon}>
+            <MaterialIcons name="photo-camera" size={20} color="#fff" />
+          </TouchableOpacity>
         </View>
-
-        {/* Password */}
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            style={styles.input}
-            secureTextEntry
-            placeholder="Enter Password"
-            placeholderTextColor="#9ca3af"
-          />
-        </View>
-
         {/* Full Name */}
-        <View style={styles.inputContainer}>
+        <View style={styles.inputGroup}>
           <Text style={styles.label}>Full name</Text>
           <TextInput
             value={fullName}
             onChangeText={setFullName}
             style={styles.input}
             placeholder="Full name"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor="#aaa"
           />
         </View>
-
+        {/* Email */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Email address</Text>
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor="#aaa"
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        </View>
+        {/* Account (hidden) */}
+        <View style={{ display: 'none' }}>
+          <TextInput value={account} onChangeText={setAccount} />
+        </View>
+        {/* Password */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Password</Text>
+          <TextInput
+            value={password}
+            onChangeText={setPassword}
+            style={styles.input}
+            secureTextEntry
+            placeholder="Password"
+            placeholderTextColor="#aaa"
+          />
+        </View>
         {/* Role */}
-        <View style={styles.inputContainer}>
+        <View style={styles.inputGroup}>
           <Text style={styles.label}>Role</Text>
           <TextInput
             value={role}
             editable={false}
             style={[styles.input, styles.disabledInput]}
             placeholder="Student, Teacher, Admin"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor="#aaa"
           />
         </View>
-
         {/* Status */}
-        <View style={styles.inputContainer}>
+        <View style={styles.inputGroup}>
           <Text style={styles.label}>Status</Text>
           <TextInput
             value={isActive ? 'Active' : 'Inactive'}
             editable={false}
             style={[styles.input, styles.disabledInput]}
             placeholder="Active or Inactive"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor="#aaa"
           />
         </View>
-
         {/* Update Button */}
         <TouchableOpacity
           style={[styles.button, loading && styles.buttonDisabled]}
@@ -203,64 +204,95 @@ export default function UpdateUserScreen() {
             {loading ? 'Updating...' : 'Update information'}
           </Text>
         </TouchableOpacity>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#f3f4f6',
-    padding: 16,
-  },
-  backContainer: {
-    marginBottom: 8,
-    marginTop: 8,
-    marginLeft: 2,
-    flexDirection: 'row',
+    backgroundColor: '#fff',
+    padding: 20,
     alignItems: 'center',
   },
-  backButton: {
-    padding: 6,
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 18,
+    marginTop: 8,
+    width: '100%',
+    justifyContent: 'space-between',
   },
-  card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+  backButton: {
+    padding: 4,
+    marginRight: 8,
   },
   header: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 20,
+    color: '#222',
     textAlign: 'center',
+    flex: 1,
   },
-  inputContainer: {
-    marginBottom: 16,
+  avatarContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 18,
+    marginTop: 8,
+  },
+  avatar: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: '#eee',
+  },
+  cameraIcon: {
+    position: 'absolute',
+    bottom: 0,
+    right: (88 - 32) / 2 * -1 + 8,
+    backgroundColor: '#8e24aa',
+    borderRadius: 16,
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+    elevation: 2,
+  },
+  inputGroup: {
+    width: '100%',
+    marginBottom: 18,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
+    fontSize: 15,
+    color: '#888',
+    marginBottom: 2,
+    marginLeft: 2,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    padding: 12,
+    borderBottomWidth: 1.5,
+    borderColor: '#e0e0e0',
+    borderRadius: 0,
+    paddingVertical: 8,
+    paddingHorizontal: 0,
     fontSize: 16,
-    backgroundColor: '#ffffff',
-    color: '#1f2937',
+    backgroundColor: 'transparent',
+    color: '#222',
+  },
+  inputTag: {
+    borderBottomWidth: 2,
+    borderColor: '#8e24aa',
+    borderRadius: 0,
+    paddingVertical: 8,
+    paddingHorizontal: 0,
+    fontSize: 16,
+    backgroundColor: 'transparent',
+    color: '#222',
   },
   disabledInput: {
-    backgroundColor: '#e5e7eb',
+    backgroundColor: '#f3f4f6',
     color: '#6b7280',
   },
   button: {
@@ -268,7 +300,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 10,
+    width: '100%',
   },
   buttonDisabled: {
     backgroundColor: '#6b7280',
@@ -277,6 +310,6 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#fff',
   },
 });
