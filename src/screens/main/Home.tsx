@@ -18,51 +18,48 @@ export default function Home() {
         setLoadingBooks(true);
         setError(null);
         try {
-            // Lấy token từ AsyncStorage
+            // Get token from AsyncStorage
             const token = await AsyncStorage.getItem('userToken');
             if (!token) {
-                setError('Không tìm thấy token. Vui lòng đăng nhập lại.');
+                setError('Token not found. Please log in again.');
                 setLoadingBooks(false);
                 return;
             }
 
-            console.log('Token:', token);  // Kiểm tra token trong console
+            console.log('Token:', token);  // Check token in console
 
-            // API URL để lấy tất cả sách với tiêu đề "Đắc Nhân Tâm nè nè"
+            // API URL to fetch all books titled "Đắc Nhân Tâm nè nè"
             const url = 'https://bilogieseducationapp.onrender.com/api/Book/search';
 
-            // Gửi yêu cầu với token trong header
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${token}`,  // Gửi token trong Authorization header
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
             });
 
-            // Kiểm tra mã trạng thái HTTP
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
 
             const data = await response.json();
 
-            // Lọc tất cả các sách đã được phê duyệt (status: 'approved')
+            // Filter all approved books (status: 'Approved')
             const approvedBooks = data.filter((book: any) => book.status === 'Approved');
-            setBooks(approvedBooks); // Lưu tất cả sách đã được phê duyệt vào state
+            setBooks(approvedBooks);
         } catch (err) {
             console.error('Fetch error:', err);
-            setError('Không thể tải dữ liệu. Vui lòng thử lại sau.');
+            setError('Unable to load data. Please try again later.');
         } finally {
             setLoadingBooks(false);
         }
     };
 
     useEffect(() => {
-        fetchBooks(); // Gọi hàm fetchBooks khi component được render
+        fetchBooks();
     }, []);
 
-    // Fetch chapters for selected book
     useEffect(() => {
         if (selectedBook) {
             setChapters(selectedBook.chapters || []);
@@ -71,13 +68,11 @@ export default function Home() {
         }
     }, [selectedBook]);
 
-    // Handle book selection
     const handleBookSelect = (book: any) => {
         setSelectedBook(book);
-        setShowModal(false); // Close modal when book is selected
+        setShowModal(false);
     };
 
-    // Toggle expanded chapter
     const toggleChapter = (chapterId: string) => {
         setSelectedChapter(selectedChapter?.chapter_Id === chapterId ? null : { ...selectedChapter, chapter_Id: chapterId });
     };
@@ -127,7 +122,7 @@ export default function Home() {
                         <Text style={styles.selectBookBtnText}>Select a book</Text>
                     </TouchableOpacity>
                     <Text style={styles.selectBookText}>
-                        {selectedBook ? selectedBook.book_Title : 'Chưa chọn sách'}
+                        {selectedBook ? selectedBook.book_Title : 'No book selected'}
                     </Text>
                 </View>
 
@@ -157,7 +152,7 @@ export default function Home() {
                                 </View>
                             ) : (
                                 <Text style={{ color: "red", textAlign: "center", marginVertical: 20 }}>
-                                    Không có sách nào hoặc chưa lấy được dữ liệu!
+                                    No books available or data could not be retrieved!
                                 </Text>
                             )}
                             <Pressable
@@ -219,10 +214,12 @@ const styles = StyleSheet.create({
     cardImage: { width: '100%', height: 120, borderRadius: 8 },
     cardTitle: { fontSize: 16, fontWeight: 'bold', marginTop: 8, textAlign: 'center' },
     cardSubtitle: { fontSize: 14, color: '#555', marginTop: 4 },
+    learnMoreBtn: { position: 'absolute', top: 10, right: 10, backgroundColor: '#1e90ff', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, zIndex: 1 },
+    learnMoreText: { color: '#fff', fontSize: 12 },
     selectBookContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 12, justifyContent: 'flex-start' },
-    selectBookBtn: { padding: 10, backgroundColor: '#1e90ff', borderRadius: 8, marginRight: 10, },
+    selectBookBtn: { padding: 10, backgroundColor: '#1e90ff', borderRadius: 8, marginRight: 10 },
     selectBookBtnText: { fontSize: 16, color: '#fff' },
-    selectBookText: { fontSize: 16, color: '#333', flex: 1, textAlign: 'right', },
+    selectBookText: { fontSize: 16, color: '#333', flex: 1, textAlign: 'right' },
     pickerContainer: { padding: 10 },
     pickerItem: { padding: 12, backgroundColor: '#ddd', borderRadius: 8, marginTop: 8 },
     pickerItemText: { fontSize: 16, color: '#333' },

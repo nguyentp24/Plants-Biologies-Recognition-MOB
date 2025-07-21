@@ -49,6 +49,7 @@ export default function SignIn() {
       if (data.token) {
         // Lưu token vào AsyncStorage
         await AsyncStorage.setItem('userToken', data.token);
+        await AsyncStorage.setItem('userId', data.user_Id);
         // Lưu thông tin user vào AsyncStorage (CHUẨN KEY TỪ API)
         await AsyncStorage.setItem(
           'userInfo',
