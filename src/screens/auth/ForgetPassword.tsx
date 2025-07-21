@@ -1,348 +1,170 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
     TextInput,
     TouchableOpacity,
     StyleSheet,
-    Image,
-    SafeAreaView,
-    Dimensions,
+    KeyboardAvoidingView,
+    Platform,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialIcons } from '@expo/vector-icons';
-import Animated, {
-    useSharedValue,
-    useAnimatedStyle,
-    withSpring,
-    withTiming,
-    Easing,
-} from 'react-native-reanimated';
-import { AuthStackParamList } from '../../types/navigation';
-import { useAuth } from '../../contexts/AuthContext';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-
-// Định nghĩa kiểu TypeScript cho AuthContext
-interface AuthContextType {
-    setLoggedIn: (value: boolean) => void;
-}
 
 export default function ForgetPassword() {
-    const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
-    const { setLoggedIn } = useAuth() as AuthContextType;
-
+    const navigation = useNavigation();
     const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const [rememberMe, setRememberMe] = useState(false);
+    const [message, setMessage] = useState('');
 
-    // Animation state
-    const scaleValues = {
-        signIn: useSharedValue(1),
-        google: useSharedValue(1),
-        signUp: useSharedValue(1),
-        forgotPassword: useSharedValue(1),
-    };
-    const opacity = useSharedValue(0);
-
-    // Hiệu ứng fade-in khi tải
-    useEffect(() => {
-        opacity.value = withTiming(1, {
-            duration: 800,
-            easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-        });
-    }, []);
-
-    // Xử lý hiệu ứng nhấn
-    const handlePressIn = (key: keyof typeof scaleValues) => {
-        scaleValues[key].value = withSpring(0.92, { damping: 12, stiffness: 200 });
-    };
-
-    const handlePressOut = (key: keyof typeof scaleValues) => {
-        scaleValues[key].value = withSpring(1, { damping: 12, stiffness: 200 });
-    };
-
-    // Animated style
-    const animatedStyles = {
-        container: useAnimatedStyle(() => ({
-            opacity: opacity.value,
-        })),
-        signIn: useAnimatedStyle(() => ({
-            transform: [{ scale: scaleValues.signIn.value }],
-        })),
-        google: useAnimatedStyle(() => ({
-            transform: [{ scale: scaleValues.google.value }],
-        })),
-        signUp: useAnimatedStyle(() => ({
-            transform: [{ scale: scaleValues.signUp.value }],
-        })),
-        forgotPassword: useAnimatedStyle(() => ({
-            transform: [{ scale: scaleValues.forgotPassword.value }],
-        })),
-    };
-
-    const handleSignIn = async () => {
-        if (!email || !password) {
-            setError('Vui lòng nhập đầy đủ thông tin.');
+    const handleSendVerification = async () => {
+        if (!email) {
+            setError('Please enter your email.');
+            setMessage('');
             return;
         }
+        setError('');
+        setMessage('');
 
         try {
-            const response = await fetch('https://plants-biologies.onrender.com/api/Authentication/login', {
+            const response = await fetch('https://bilogieseducationapp.onrender.com/api/Authentication/forgot-password/request', {
                 method: 'POST',
                 headers: {
                     'Accept': '*/*',
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    account: email,
-                    password: password,
+                    email: email.trim(),
                 }),
             });
 
-            const data = await response.json();
-
-            if (data.token) {
-                await AsyncStorage.setItem('userToken', data.token);
-                setLoggedIn(true);
+            const resText = await response.text();
+            if (response.ok) {
+                setMessage(resText || 'Verification code sent to your email.');
+                // CHUYỂN MÀN HÌNH ConfirmPassword và truyền email
+                setTimeout(() => {
+                    (navigation as any).navigate('ConfirmPassword', { email: email.trim() });
+                }, 1000); // Chờ 1 giây cho user thấy thông báo
             } else {
-                setError('Đăng nhập thất bại. Vui lòng thử lại.');
+                setError(resText || 'An error occurred. Please try again.');
             }
-        } catch (e) {
-            console.error('Đăng nhập lỗi:', e);
-            setError('Đăng nhập thất bại. Vui lòng thử lại.');
+        } catch (err) {
+            setError('An error occurred. Please try again.');
         }
     };
 
+    const handleCancel = () => {
+        navigation.goBack();
+    };
+
     return (
-        <SafeAreaView style={styles.container}>
-            <LinearGradient
-                colors={['#1B263B', '#2E3B55']}
-                style={styles.gradientBackground}
-            >
-                <Animated.View style={[styles.contentWrapper, animatedStyles.container]}>
-                    {/* Logo Section */}
-                    <View style={styles.logoSection}>
-                        <Image
-                            source={{ uri: 'https://via.placeholder.com/150' }}
-                            style={styles.logo}
-                        />
-                        <Text style={styles.logoText}>PLANT BIOLOGY EDUCATION</Text>
-                    </View>
+        <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+            <View style={styles.card}>
+                <Text style={styles.title}>Forgot Password</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Email *"
+                    placeholderTextColor="#888"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                />
 
-                    {/* Header */}
-                    <LinearGradient
-                        colors={['#ff4000ff', '#D4A017']}
-                        style={styles.headerGradient}
+                {error !== '' && <Text style={styles.error}>{error}</Text>}
+                {message !== '' && <Text style={styles.success}>{message}</Text>}
+
+                <View style={styles.row}>
+                    <TouchableOpacity onPress={handleCancel} style={styles.cancelBtn}>
+                        <Text style={styles.cancelText}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={handleSendVerification}
+                        style={styles.sendBtn}
                     >
-                        <Text style={styles.header}>Đăng nhập</Text>
-                    </LinearGradient>
-
-                    {/* Input Card */}
-
-                    <View style={styles.inputCard}>
-                        <Text style={styles.label}>Tài khoản</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Username"
-                            value={email}
-                            onChangeText={setEmail}
-                            placeholderTextColor="#666"
-                        />
-                        <Text style={styles.label}>Mật khẩu</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Password"
-                            value={password}
-                            onChangeText={setPassword}
-                            secureTextEntry
-                            placeholderTextColor="#666"
-                        />
-                        <TouchableOpacity onPress={() => setRememberMe(!rememberMe)}>
-                            <Text style={styles.rememberMeText}>
-                                {rememberMe ? '☑ Ghi nhớ tôi' : '⬜ Ghi nhớ tôi'}
-                            </Text>
-                        </TouchableOpacity>
-                        {error !== '' && <Text style={styles.error}>{error}</Text>}
-                    </View>
-
-                    {/* Sign In Button */}
-                    <Animated.View style={[styles.button, animatedStyles.signIn]}>
-                        <TouchableOpacity
-                            onPressIn={() => handlePressIn('signIn')}
-                            onPressOut={() => handlePressOut('signIn')}
-                            onPress={handleSignIn}
-                        >
-                            <Text style={styles.buttonText}>Đăng nhập</Text>
-                        </TouchableOpacity>
-                    </Animated.View>
-
-                    {/* Forgot Password */}
-                    <Animated.View style={[styles.linkContainer, animatedStyles.forgotPassword]}>
-                        <TouchableOpacity
-                            onPressIn={() => handlePressIn('forgotPassword')}
-                            onPressOut={() => handlePressOut('forgotPassword')}
-                            onPress={() => console.log('Forgot password pressed')}
-                        >
-                            <Text style={styles.linkText}>Quên mật khẩu?</Text>
-                        </TouchableOpacity>
-                    </Animated.View>
-
-                    {/* Google Sign In
-                
-                        <Animated.View style={[styles.googleButton, animatedStyles.google]}>
-                            <TouchableOpacity
-                                onPressIn={() => handlePressIn('google')}
-                                onPressOut={() => handlePressOut('google')}
-                                onPress={() => console.log('Google sign in pressed')}
-                            >
-                                <MaterialIcons name="email" size={wp('6%')} color="#FFD700" style={styles.icon} />
-                                <Text style={styles.googleButtonText}>Đăng nhập với Google</Text>
-                            </TouchableOpacity>
-                        </Animated.View> */}
-
-                    {/* Sign Up Link */}
-                    <Animated.View style={[styles.linkContainer, animatedStyles.signUp]}>
-                        <TouchableOpacity
-                            onPressIn={() => handlePressIn('signUp')}
-                            onPressOut={() => handlePressOut('signUp')}
-                            onPress={() => navigation.navigate('SignUp')}
-                        >
-                            <Text style={styles.linkText}>Chưa có tài khoản? Đăng ký</Text>
-                        </TouchableOpacity>
-                    </Animated.View>
-                </Animated.View>
-            </LinearGradient>
-        </SafeAreaView>
+                        <Text style={styles.sendText}>Send Verification</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </KeyboardAvoidingView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    },
-    gradientBackground: {
-        flex: 1,
-    },
-    contentWrapper: {
-        flex: 1,
-        paddingHorizontal: wp('5%'),
-        paddingVertical: hp('2%'),
+        backgroundColor: '#F7F8FB',
         justifyContent: 'center',
-    },
-    logoSection: {
         alignItems: 'center',
-        marginBottom: hp('4%'),
     },
-    logo: {
-        width: wp('20%'),
-        height: wp('20%'),
-        borderRadius: wp('4%'),
-        borderWidth: 2,
-        borderColor: '#FFD700',
-        padding: wp('0.5%'),
+    card: {
+        width: '90%',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 24,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 4,
     },
-    logoText: {
-        fontSize: wp('5%'),
-        fontWeight: '700',
-        color: '#fff',
-        marginTop: hp('1%'),
-        textShadowColor: '#00000040',
-        textShadowOffset: { width: 0, height: 2 },
-        textShadowRadius: 6,
-    },
-    headerGradient: {
-        borderRadius: wp('4%'),
-        paddingVertical: hp('2%'),
-        paddingHorizontal: wp('6%'),
-        marginBottom: hp('3%'),
-    },
-    header: {
-        fontSize: wp('7%'),
-        fontWeight: '700',
-        color: '#fff',
-        textAlign: 'center',
-        textShadowColor: '#00000040',
-        textShadowOffset: { width: 0, height: 2 },
-        textShadowRadius: 6,
-    },
-    inputCard: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: wp('4%'),
-        padding: wp('4%'),
-        marginBottom: hp('3%'),
-        width: "100%",
-    },
-    label: {
-        fontSize: wp('4%'),
-        fontWeight: '500',
-        color: '#1B263B',
-        marginBottom: hp('1%'),
-        marginLeft: wp('2%'),
+    title: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        marginBottom: 24,
+        color: '#1a1a1a',
     },
     input: {
         borderWidth: 1,
-        borderColor: '#FFD700',
-        padding: wp('3%'),
-        borderRadius: wp('2%'),
-        marginBottom: hp('2%'),
-        marginHorizontal: wp('2%'),
-        fontSize: wp('4%'),
-        color: '#1B263B',
-        backgroundColor: '#F5F5F5',
-    },
-    rememberMeText: {
-        fontSize: wp('3.5%'),
-        color: '#1B263B',
-        marginLeft: wp('2%'),
-        marginBottom: hp('1.5%'),
+        borderColor: '#ddd',
+        borderRadius: 8,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        fontSize: 16,
+        backgroundColor: '#f6f6fa',
+        marginBottom: 16,
     },
     error: {
-        color: '#FF5252',
-        fontSize: wp('3.5%'),
-        textAlign: 'center',
-        marginBottom: hp('1.5%'),
+        color: '#d32f2f',
+        fontSize: 14,
+        marginBottom: 8,
     },
-    button: {
-        backgroundColor: '#FFD700',
-        padding: wp('3.5%'),
-        borderRadius: wp('4%'),
+    success: {
+        color: '#388e3c',
+        fontSize: 14,
+        marginBottom: 8,
+    },
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
         alignItems: 'center',
-        marginBottom: hp('2%'),
+        marginTop: 10,
     },
-    buttonText: {
-        color: '#1B263B',
-        fontWeight: '600',
-        fontSize: wp('4.5%'),
+    cancelBtn: {
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        marginRight: 10,
     },
-    // googleButton: {
-    //     flexDirection: 'row',
-    //     alignItems: 'center',
-    //     backgroundColor: '#FFFFFF',
-    //     padding: wp('3.5%'),
-    //     borderRadius: wp('4%'),
-    //     marginBottom: hp('2%'),
-    // },
-    // googleButtonText: {
-    //     color: '#1B263B',
-    //     fontWeight: '600',
-    //     fontSize: wp('4.5%'),
-    //     flex: 1,
-    //     textAlign: 'center',
-    // },
-    icon: {
-        marginLeft: wp('2%'),
+    cancelText: {
+        color: '#384454',
+        fontSize: 16,
     },
-    linkContainer: {
-        alignItems: 'center',
-        marginBottom: hp('2%'),
+    sendBtn: {
+        backgroundColor: '#21242b',
+        paddingHorizontal: 18,
+        paddingVertical: 10,
+        borderRadius: 8,
+        shadowColor: '#111',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.15,
+        shadowRadius: 2,
+        elevation: 2,
     },
-    linkText: {
-        fontSize: wp('4%'),
-        color: '#FFD700',
-        textDecorationLine: 'underline',
+    sendText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 16,
     },
 });

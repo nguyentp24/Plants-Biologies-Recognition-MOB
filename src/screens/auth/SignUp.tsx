@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../types/navigation';
@@ -9,7 +9,7 @@ export default function SignUp() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [role, setRole] = useState('Student'); // Default role
+    const [role, setRole] = useState('Student');
     const [error, setError] = useState('');
 
     const handleSignUp = async () => {
@@ -26,17 +26,23 @@ export default function SignUp() {
                 },
                 body: JSON.stringify({
                     account: email,
+                    email: email,
                     password: password,
                     fullName: name,
                     role: role,
+                    isActive: true,
                 }),
             });
+
+            const data = await response.json();
             if (!response.ok) {
-                setError('Đã có lỗi xảy ra. Vui lòng thử lại.');
+                setError(data?.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.');
                 return;
             }
-            const data = await response.json();
-            if (data.userId) {
+            if (data.user_Id) {
+                Alert.alert('Đăng ký thành công', 'Hãy đăng nhập để tiếp tục!', [
+                    { text: 'OK', onPress: () => navigation.navigate('SignIn') }
+                ]);
                 navigation.navigate('SignIn');
             } else {
                 setError('Đăng ký thất bại. Vui lòng thử lại.');
@@ -61,44 +67,48 @@ export default function SignUp() {
                     value={name}
                     onChangeText={setName}
                 />
-                {/* Email Input */}
-                <TextInput
-                    style={styles.input}
-                    placeholder="Email"
-                    placeholderTextColor="#bbb"
-                    value={email}
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
-                />
-                {/* Password Input */}
-                <TextInput
-                    style={styles.input}
-                    placeholder="Password"
-                    placeholderTextColor="#bbb"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                />
-                {/* Role Selection */}
-                <View style={styles.roleSection}>
-                    <TouchableOpacity
-                        style={[styles.roleButton, role === 'Student' && styles.selectedRole]}
-                        onPress={() => setRole('Student')}
-                    >
-                        <Text style={[styles.roleText, role === 'Student' && styles.selectedRoleText]}>Student</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.roleButton, role === 'Teacher' && styles.selectedRole]}
-                        onPress={() => setRole('Teacher')}
-                    >
-                        <Text style={[styles.roleText, role === 'Teacher' && styles.selectedRoleText]}>Teacher</Text>
-                    </TouchableOpacity>
-                </View>
-                {/* Error message */}
-                {error !== '' && <Text style={styles.error}>{error}</Text>}
-                {/* Sign Up Button */}
-                <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-                    <Text style={styles.buttonText}>Sign Up</Text>
+                <Text style={styles.logoText}>PLANT BIOLOGY EDUCATION</Text>
+            </View>
+
+            {/* Title */}
+            <Text style={styles.title}>Sign up</Text>
+
+            {/* Full Name Input */}
+            <Text style={styles.label}>Full name</Text>
+            <TextInput
+                style={styles.input}
+                placeholder="Full Name"
+                value={name}
+                onChangeText={setName}
+            />
+
+            {/* Account (Username) Input */}
+            <Text style={styles.label}>Account</Text>
+            <TextInput
+                style={styles.input}
+                placeholder="Username"
+                value={email}
+                onChangeText={setEmail}
+            />
+
+            {/* Password Input */}
+            <Text style={styles.label}>Password</Text>
+            <TextInput
+                style={styles.input}
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+            />
+
+            {/* Role Selection */}
+            <Text style={styles.label}>Role</Text>
+            <View style={styles.roleSection}>
+                <TouchableOpacity
+                    style={[styles.roleButton, role === 'Student' && styles.selectedRole]}
+                    onPress={() => setRole('Student')}
+                >
+                    <Text style={styles.roleText}>Student</Text>
                 </TouchableOpacity>
                 {/* "or" separator */}
                 <Text style={styles.orText}>or</Text>
