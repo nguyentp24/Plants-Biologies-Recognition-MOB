@@ -3,23 +3,28 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Modal, Pre
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+type RootStackParamList = {
+    LessonDetail: { lessonId: string };
+};
 
 export default function Home() {
-    const navigation = useNavigation();
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
     const [books, setBooks] = useState<any[]>([]);
     const [error, setError] = useState('');
     const [selectedBook, setSelectedBook] = useState<any | null>(null);
     const [chapters, setChapters] = useState<any[]>([]);
     const [selectedChapter, setSelectedChapter] = useState<any | null>(null);
     const [showModal, setShowModal] = useState(false);
+    const [viewBookModal, setViewBookModal] = useState(false);
     const [loadingBooks, setLoadingBooks] = useState(false);
 
-    // Fetch books data from the API
     const fetchBooks = async () => {
         setLoadingBooks(true);
         setError(null);
         try {
-            // Get token from AsyncStorage
             const token = await AsyncStorage.getItem('userToken');
             if (!token) {
                 setError('Token not found. Please login again.');
@@ -27,9 +32,7 @@ export default function Home() {
                 return;
             }
 
-            // API URL để lấy tất cả sách với tiêu đề "Đắc Nhân Tâm nè nè"
             const url = 'https://bilogieseducationapp.onrender.com/api/Book/search';
-
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
@@ -43,8 +46,6 @@ export default function Home() {
             }
 
             const data = await response.json();
-
-            // Filter all approved books (status: 'Approved')
             const approvedBooks = data.filter((book: any) => book.status === 'Approved');
             setBooks(approvedBooks);
         } catch (err) {
@@ -69,8 +70,12 @@ export default function Home() {
     const handleBookSelect = (book: any) => {
         setSelectedBook(book);
         setShowModal(false);
+        setViewBookModal(true);
     };
 
+    const handleLessonSelect = (lessonId: string) => {
+        navigation.navigate('LessonDetail', { lessonId });
+    };
     const toggleChapter = (chapterId: string) => {
         setSelectedChapter(selectedChapter?.chapter_Id === chapterId ? null : { ...selectedChapter, chapter_Id: chapterId });
     };
@@ -78,9 +83,7 @@ export default function Home() {
     return (
         <View style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContainer}>
-                {/* Gradient Header Card */}
                 <LinearGradient colors={["#a8e063", "#56ab2f"]} style={styles.gradientCard}>
-                    {/* Bubbles */}
                     <View style={[styles.bubble, { top: 10, left: 10, width: 50, height: 50, opacity: 0.18 }]} />
                     <View style={[styles.bubble, { top: 30, right: 30, width: 40, height: 40, opacity: 0.13 }]} />
                     <View style={[styles.bubble, { bottom: 10, left: 60, width: 30, height: 30, opacity: 0.10 }]} />
@@ -88,7 +91,6 @@ export default function Home() {
                     <Text style={styles.visualGreenSubtitle}>Explore the biology plants and animals.</Text>
                 </LinearGradient>
 
-                {/* Section: Book Categories */}
                 <Text style={styles.sectionHeader}>Book Categories</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
                     {loadingBooks ? (
@@ -98,9 +100,9 @@ export default function Home() {
                             <View key={book.book_Id} style={styles.card}>
                                 <TouchableOpacity
                                     style={styles.learnMoreBtn}
-                                    onPress={() => { }}
+                                    onPress={() => handleBookSelect(book)}
                                 >
-                                    <Text style={styles.learnMoreText}>Learn more</Text>
+                                    <Text style={styles.learnMoreText}>View Book</Text>
                                 </TouchableOpacity>
                                 <Image
                                     source={{ uri: book.cover_img }}
@@ -115,7 +117,30 @@ export default function Home() {
                     )}
                 </ScrollView>
 
-                {/* Section: Select a Book */}
+                <Modal
+                    visible={viewBookModal}
+                    animationType="fade"
+                    transparent={true}
+                    onRequestClose={() => setViewBookModal(false)}
+                >
+                    <View style={styles.modalBackground}>
+                        <View style={styles.modalContainer}>
+                            {selectedBook && (
+                                <Image
+                                    source={{ uri: selectedBook.cover_img }}
+                                    style={styles.fullImage}
+                                />
+                            )}
+                            <Pressable
+                                style={styles.closeButton}
+                                onPress={() => setViewBookModal(false)}
+                            >
+                                <Text style={styles.closeButtonText}>Close</Text>
+                            </Pressable>
+                        </View>
+                    </View>
+                </Modal>
+
                 <Text style={styles.sectionHeader}>Select a Book to Continue</Text>
                 <View style={styles.selectBookContainer}>
                     <TouchableOpacity
@@ -129,7 +154,6 @@ export default function Home() {
                     </Text>
                 </View>
 
-                {/* Modal for Book Selection */}
                 <Modal
                     visible={showModal}
                     animationType="slide"
@@ -186,9 +210,12 @@ export default function Home() {
                                     {selectedChapter?.chapter_Id === chapter.chapter_Id && (
                                         <View style={styles.lessonContainer}>
                                             {chapter.lessons.map((lesson: any) => (
-                                                <Text key={lesson.lesson_Id} style={styles.lesson}>
-                                                    {lesson.lesson_Title}
-                                                </Text>
+                                                <TouchableOpacity
+                                                    key={lesson.lesson_Id}
+                                                    onPress={() => handleLessonSelect(lesson.lesson_Id)}
+                                                >
+                                                    <Text style={styles.lesson}>{lesson.lesson_Title}</Text>
+                                                </TouchableOpacity>
                                             ))}
                                         </View>
                                     )}
@@ -261,4 +288,5 @@ const styles = StyleSheet.create({
     modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
     closeButton: { marginTop: 20, backgroundColor: '#56ab2f', paddingVertical: 10, borderRadius: 8 },
     closeButtonText: { color: '#fff', textAlign: 'center' },
+    fullImage: { width: '100%', height: 300, resizeMode: 'contain', marginBottom: 20 },
 });

@@ -9,12 +9,12 @@ export default function SignUp() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [role, setRole] = useState('Student');
+    const [role, setRole] = useState<'Student' | 'Teacher'>('Student');
     const [error, setError] = useState('');
 
     const handleSignUp = async () => {
         if (!name || !email || !password) {
-            setError('Vui lòng điền đầy đủ thông tin.');
+            setError('Please fill in all fields.');
             return;
         }
         try {
@@ -36,30 +36,30 @@ export default function SignUp() {
 
             const data = await response.json();
             if (!response.ok) {
-                setError(data?.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.');
+                setError(data?.message || 'Something went wrong. Please try again.');
                 return;
             }
             if (data.user_Id) {
-                Alert.alert('Đăng ký thành công', 'Hãy đăng nhập để tiếp tục!', [
+                Alert.alert('Sign up successful', 'Please sign in to continue.', [
                     { text: 'OK', onPress: () => navigation.navigate('SignIn') }
                 ]);
-                navigation.navigate('SignIn');
             } else {
-                setError('Đăng ký thất bại. Vui lòng thử lại.');
+                setError('Sign up failed. Please try again.');
             }
         } catch (e) {
-            setError('Đã có lỗi xảy ra. Vui lòng thử lại.');
+            setError('Something went wrong. Please try again.');
         }
     };
 
     return (
         <View style={styles.screen}>
             <View style={styles.card}>
-                {/* Logo text */}
+                {/* Logo */}
                 <Text style={styles.logoText}>BiologiesRecognition</Text>
                 {/* Title */}
                 <Text style={styles.title}>Sign Up</Text>
-                {/* Full Name Input */}
+
+                {/* Input Fields */}
                 <TextInput
                     style={styles.input}
                     placeholder="Full Name"
@@ -67,64 +67,75 @@ export default function SignUp() {
                     value={name}
                     onChangeText={setName}
                 />
-                <Text style={styles.logoText}>PLANT BIOLOGY EDUCATION</Text>
-            </View>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Email"
+                    placeholderTextColor="#bbb"
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Password"
+                    placeholderTextColor="#bbb"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                />
 
-            {/* Title */}
-            <Text style={styles.title}>Sign up</Text>
+                {/* Role Selection */}
+                <View style={styles.roleRow}>
+                    <TouchableOpacity
+                        style={[
+                            styles.roleBtn,
+                            role === 'Student' && styles.selectedRoleBtn
+                        ]}
+                        onPress={() => setRole('Student')}
+                    >
+                        <Text style={[
+                            styles.roleBtnText,
+                            role === 'Student' && styles.selectedRoleBtnText
+                        ]}>Student</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[
+                            styles.roleBtn,
+                            role === 'Teacher' && styles.selectedRoleBtn
+                        ]}
+                        onPress={() => setRole('Teacher')}
+                    >
+                        <Text style={[
+                            styles.roleBtnText,
+                            role === 'Teacher' && styles.selectedRoleBtnText
+                        ]}>Teacher</Text>
+                    </TouchableOpacity>
+                </View>
 
-            {/* Full Name Input */}
-            <Text style={styles.label}>Full name</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Full Name"
-                value={name}
-                onChangeText={setName}
-            />
+                {error !== '' && <Text style={styles.error}>{error}</Text>}
 
-            {/* Account (Username) Input */}
-            <Text style={styles.label}>Account</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Username"
-                value={email}
-                onChangeText={setEmail}
-            />
-
-            {/* Password Input */}
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-            />
-
-            {/* Role Selection */}
-            <Text style={styles.label}>Role</Text>
-            <View style={styles.roleSection}>
-                <TouchableOpacity
-                    style={[styles.roleButton, role === 'Student' && styles.selectedRole]}
-                    onPress={() => setRole('Student')}
-                >
-                    <Text style={styles.roleText}>Student</Text>
+                {/* Sign Up Button */}
+                <TouchableOpacity style={styles.signupBtn} onPress={handleSignUp}>
+                    <Text style={styles.signupBtnText}>Sign Up</Text>
                 </TouchableOpacity>
-                {/* "or" separator */}
-                <Text style={styles.orText}>or</Text>
-                {/* Sign up with Google */}
-                <TouchableOpacity
-                    style={styles.googleButton}
-                    onPress={() => console.log('Google sign up pressed')}
-                >
-                    <Image source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/4/4a/Logo_2013_Google.png' }} style={styles.socialIcon} />
-                    <Text style={styles.googleButtonText}>Sign up with Google</Text>
+
+                {/* or */}
+                <Text style={styles.or}>or</Text>
+
+                {/* Google Sign up */}
+                <TouchableOpacity style={styles.googleBtn} onPress={() => Alert.alert('Google sign up')}>
+                    <Image
+                        source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/4/4a/Logo_2013_Google.png' }}
+                        style={styles.googleIcon}
+                    />
+                    <Text style={styles.googleBtnText}>Sign up with Google</Text>
                 </TouchableOpacity>
-                {/* Sign in link */}
-                <View style={styles.signupRow}>
-                    <Text style={styles.signupText}>Already have an account? </Text>
+
+                {/* Sign In link */}
+                <View style={styles.footerRow}>
+                    <Text style={styles.footerText}>Already have an account? </Text>
                     <TouchableOpacity onPress={() => navigation.navigate('SignIn')}>
-                        <Text style={styles.signupLink}>Sign In</Text>
+                        <Text style={styles.footerLink}>Sign In</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -135,142 +146,138 @@ export default function SignUp() {
 const styles = StyleSheet.create({
     screen: {
         flex: 1,
-        backgroundColor: '#f5f6fa',
+        backgroundColor: '#f8f8fb',
         justifyContent: 'center',
         alignItems: 'center',
     },
     card: {
-        width: '90%',
+        width: '92%',
         backgroundColor: '#fff',
-        borderRadius: 24,
-        paddingVertical: 32,
-        paddingHorizontal: 24,
+        borderRadius: 18,
+        padding: 22,
+        alignItems: 'center',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
+        shadowOpacity: 0.10,
         shadowRadius: 8,
         elevation: 4,
-        alignItems: 'center',
     },
     logoText: {
-        fontFamily: 'cursive',
-        color: '#2e8b57',
-        fontSize: 32,
+        fontSize: 30,
+        color: '#179049',
+        marginBottom: 2,
+        marginTop: 10,
+        fontFamily: 'DancingScript-Bold', // Cần import font viết tay, nếu không có dùng fontFamily: 'cursive'
+        textAlign: 'center',
         fontWeight: 'bold',
-        marginBottom: 8,
     },
     title: {
         fontSize: 22,
         fontWeight: 'bold',
+        marginBottom: 20,
         color: '#222',
-        marginBottom: 24,
+        textAlign: 'center',
     },
     input: {
         width: '100%',
-        backgroundColor: '#f2f3f7',
+        backgroundColor: '#f7f7fa',
         borderRadius: 10,
-        paddingHorizontal: 16,
+        paddingHorizontal: 18,
         paddingVertical: 12,
         fontSize: 16,
         marginBottom: 14,
         borderWidth: 0,
         color: '#222',
     },
-    roleSection: {
+    roleRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         width: '100%',
-        marginBottom: 16,
+        marginBottom: 18,
+        gap: 10,
     },
-    roleButton: {
+    roleBtn: {
         flex: 1,
-        padding: 10,
+        backgroundColor: '#fff',
+        borderWidth: 2,
+        borderColor: '#179049',
         borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#ccc',
+        paddingVertical: 10,
         alignItems: 'center',
-        marginHorizontal: 4,
-        backgroundColor: '#f2f3f7',
     },
-    selectedRole: {
-        backgroundColor: '#2e8b57',
-        borderColor: '#2e8b57',
+    selectedRoleBtn: {
+        backgroundColor: '#179049',
     },
-    roleText: {
-        fontSize: 14,
-        color: '#333',
-    },
-    selectedRoleText: {
-        color: '#fff',
+    roleBtnText: {
+        color: '#179049',
+        fontSize: 16,
         fontWeight: 'bold',
     },
-    error: {
-        color: 'red',
-        marginBottom: 10,
-        textAlign: 'center',
-        width: '100%',
+    selectedRoleBtnText: {
+        color: '#fff',
     },
-    button: {
-        width: '100%',
-        backgroundColor: '#2e8b57',
-        paddingVertical: 14,
-        borderRadius: 10,
-        alignItems: 'center',
-        marginTop: 8,
+    error: {
+        color: '#e53935',
         marginBottom: 8,
-        shadowColor: '#2e8b57',
+        textAlign: 'center',
+    },
+    signupBtn: {
+        width: '100%',
+        backgroundColor: '#179049',
+        borderRadius: 10,
+        paddingVertical: 16,
+        alignItems: 'center',
+        marginBottom: 10,
+        marginTop: 4,
+        shadowColor: '#179049',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.15,
         shadowRadius: 4,
-        elevation: 2,
+        elevation: 1,
     },
-    buttonText: {
+    signupBtnText: {
         color: '#fff',
         fontWeight: 'bold',
-        fontSize: 16,
+        fontSize: 18,
     },
-    orText: {
+    or: {
+        marginVertical: 8,
+        color: '#888',
+        fontSize: 15,
         textAlign: 'center',
-        color: '#777',
-        fontSize: 14,
-        marginVertical: 10,
     },
-    googleButton: {
+    googleBtn: {
         flexDirection: 'row',
-        backgroundColor: '#f2f3f7',
-        paddingVertical: 10,
+        backgroundColor: '#f7f7fa',
         borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
         width: '100%',
-        marginTop: 8,
-        marginBottom: 16,
+        paddingVertical: 13,
+        marginBottom: 18,
     },
-    socialIcon: {
-        width: 22,
-        height: 22,
+    googleIcon: {
+        width: 20,
+        height: 20,
         marginRight: 8,
-        resizeMode: 'contain',
     },
-    googleButtonText: {
+    googleBtnText: {
         color: '#222',
-        fontWeight: '500',
+        fontWeight: '600',
         fontSize: 15,
     },
-    signupRow: {
+    footerRow: {
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: 8,
+        marginTop: 6,
     },
-    signupText: {
+    footerText: {
         color: '#888',
-        fontSize: 14,
+        fontSize: 15,
     },
-    signupLink: {
-        color: '#2e8b57',
+    footerLink: {
+        color: '#179049',
         fontWeight: 'bold',
-        fontSize: 14,
-        marginLeft: 2,
+        fontSize: 15,
     },
 });

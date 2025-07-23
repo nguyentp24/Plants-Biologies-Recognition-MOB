@@ -36,7 +36,7 @@ export default function SignIn() {
         }),
       });
       if (!response.ok) {
-        throw new Error('Đăng nhập thất bại. Vui lòng thử lại.');
+        throw new Error('Login failed. Please try again..');
       }
       const data = await response.json();
       if (data.token) {
@@ -107,7 +107,7 @@ export default function SignIn() {
         </TouchableOpacity>
         {/* Social Login */}
         <View style={styles.socialRow}>
-          <TouchableOpacity style={[styles.socialButton, { flex: 1, maxWidth: '100%' }]} onPress={() => {}}>
+          <TouchableOpacity style={[styles.socialButton, { flex: 1, maxWidth: '100%' }]} onPress={() => { }}>
             <Image source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/4/4a/Logo_2013_Google.png' }} style={styles.socialIcon} />
             <Text style={styles.socialText}>Google</Text>
           </TouchableOpacity>

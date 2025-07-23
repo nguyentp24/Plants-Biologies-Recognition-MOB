@@ -6,6 +6,7 @@ import BiologyDetail from '../screens/main/BiologyDetail';
 import { useAuth } from '../contexts/AuthContext';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import UpdateUserScreen from '../screens/main/UpdateUserScreen';
+import LessonDetail from '../screens/main/LessonDetail';
 
 const Stack = createNativeStackNavigator();
 
@@ -27,6 +28,7 @@ export default function RootNavigator() {
           <Stack.Screen name="MainTab" component={MainTab} />
           <Stack.Screen name="BiologyDetail" component={BiologyDetail} />
           <Stack.Screen name="UpdateUserScreen" component={UpdateUserScreen} />
+          <Stack.Screen name="LessonDetail" component={LessonDetail} />
         </>
       ) : (
         <Stack.Screen name="AuthStack" component={AuthStack} />
