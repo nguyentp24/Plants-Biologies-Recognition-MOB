@@ -11,7 +11,7 @@ type RouteParams = RouteProp<RootStackParamList, 'LessonDetail'>;
 
 export default function LessonDetail() {
     const route = useRoute<RouteParams>();
-    const { lessonId } = route.params;
+    const { lessonId } = route.params;  // Lấy lessonId từ tham số điều hướng
 
     const [lesson, setLesson] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -24,9 +24,11 @@ export default function LessonDetail() {
         try {
             const url = 'https://bilogieseducationapp.onrender.com/api/Lesson/search';
             const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
             const data = await response.json();
 
-            console.log(data);
             // Tìm bài học trong dữ liệu trả về từ API
             const lessonData = data.find((lesson: any) => lesson.lesson_Id === lessonId);
 
@@ -55,41 +57,40 @@ export default function LessonDetail() {
     }
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            {lesson && (
-                <View style={styles.lessonDetailContainer}>
-                    <Text style={styles.lessonTitle}>{lesson.lesson_Title}</Text>
-                    <Text style={styles.lessonContent}>{lesson.content}</Text>
-
-                    {/* Hiển thị thông tin về các loài sinh vật */}
-                    {lesson.plant_Biology_Animal && lesson.plant_Biology_Animal.length > 0 ? (
-                        lesson.plant_Biology_Animal.map((item: any) => (
-                            <View key={item.id} style={styles.biologyContainer}>
-                                <Text style={styles.commonName}>Common Name: {item.commonName}</Text>
-                                <Text style={styles.scientificName}>Scientific Name: {item.scientificName}</Text>
-                                <Text style={styles.specieType}>Specie Type: {item.specieType}</Text>
-                                <Text style={styles.description}>Description: {item.description}</Text>
-                                <Text style={styles.habitat}>Habitat: {item.habitat}</Text>
-                                <Text style={styles.lifeSpan}>Average Life Span: {item.averageLifeSpan}</Text>
-                                <Text style={styles.status}>Status: {item.status}</Text>
-
-                                {/* Hiển thị ảnh nếu có */}
-                                {item.imageUrl && (
-                                    <Image source={{ uri: item.imageUrl }} style={styles.image} />
-                                )}
-                            </View>
-                        ))
-                    ) : (
-                        <Text>No plant biology animal data available</Text>
-                    )}
-                </View>
-            )}
-        </ScrollView>
+        <View style={{ flex: 1, backgroundColor: '#fff' }}>
+            <ScrollView contentContainerStyle={styles.container}>
+                {lesson && (
+                    <View style={styles.lessonDetailContainer}>
+                        <Text style={styles.lessonTitle}>{lesson.lesson_Title}</Text>
+                        <Text style={styles.lessonContent}>{lesson.content}</Text>
+                        {lesson.plant_Biology_Animal && lesson.plant_Biology_Animal.length > 0 ? (
+                            lesson.plant_Biology_Animal.map((item: any) => (
+                                <View key={item.id} style={styles.biologyContainer}>
+                                    <Text style={styles.commonName}>Common Name: {item.commonName}</Text>
+                                    <Text style={styles.scientificName}>Scientific Name: {item.scientificName}</Text>
+                                    <Text style={styles.specieType}>Specie Type: {item.specieType}</Text>
+                                    <Text style={styles.description}>Description: {item.description}</Text>
+                                    <Text style={styles.habitat}>Habitat: {item.habitat}</Text>
+                                    <Text style={styles.lifeSpan}>Average Life Span: {item.averageLifeSpan}</Text>
+                                    <Text style={styles.status}>Status: {item.status}</Text>
+                                    {item.imageUrl && (
+                                        <Image source={{ uri: item.imageUrl }} style={styles.image} />
+                                    )}
+                                </View>
+                            ))
+                        ) : (
+                            <Text>*No plant biology animal data available*</Text>
+                        )}
+                    </View>
+                )}
+            </ScrollView>
+        </View>
     );
+
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 16 },
+    container: { padding: 16 }, // KHÔNG có flex: 1 ở đây!
     lessonDetailContainer: { marginBottom: 20 },
     lessonTitle: { fontSize: 24, fontWeight: 'bold' },
     lessonContent: { fontSize: 16, marginTop: 10 },

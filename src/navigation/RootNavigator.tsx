@@ -11,7 +11,7 @@ import LessonDetail from '../screens/main/LessonDetail';
 const Stack = createNativeStackNavigator();
 
 export default function RootNavigator() {
-  const { isLoggedIn } = useAuth();  // Sửa về đúng biến loggedIn nếu context là loggedIn
+  const { isLoggedIn } = useAuth();  
 
   if (isLoggedIn === null) {
     return (

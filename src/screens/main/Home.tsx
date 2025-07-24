@@ -213,6 +213,8 @@ export default function Home() {
                                                 <TouchableOpacity
                                                     key={lesson.lesson_Id}
                                                     onPress={() => handleLessonSelect(lesson.lesson_Id)}
+                                                    style={styles.lessonBox}
+                                                    activeOpacity={0.85}
                                                 >
                                                     <Text style={styles.lesson}>{lesson.lesson_Title}</Text>
                                                 </TouchableOpacity>
@@ -282,7 +284,8 @@ const styles = StyleSheet.create({
     chapterBtn: { padding: 10, backgroundColor: '#eafbe7', borderRadius: 8, marginTop: 8, marginHorizontal: 16 },
     chapterText: { fontSize: 16, fontWeight: 'bold', color: '#333' },
     lessonContainer: { marginLeft: 36, marginTop: 10 },
-    lesson: { fontSize: 14, color: '#777' },
+    lessonBox: { backgroundColor: '#f9fff2', borderWidth: 1, borderColor: '#cde6b5', borderRadius: 14, paddingVertical: 12, paddingHorizontal: 18, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2, },
+    lesson: { fontSize: 15, color: '#3d6132', fontWeight: '600' },
     modalBackground: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' },
     modalContainer: { backgroundColor: '#fff', padding: 20, borderRadius: 10, width: '80%' },
     modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
